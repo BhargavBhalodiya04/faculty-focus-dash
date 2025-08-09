@@ -142,13 +142,20 @@ const Login = () => {
 
             {/* Default Credentials Info */}
             <div className="mt-6 p-3 bg-card/50 rounded-lg border border-border/30">
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                Default Login Credentials
+              </p>
+              <div className="text-xs text-center space-y-1">
+                <p><span className="font-medium">Username:</span> admin</p>
+                <p><span className="font-medium">Password:</span> admin</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Powered by ICT Department • Secure Faculty Access
+          Powered by AWS Services • Secure Faculty Access
         </p>
       </div>
     </div>

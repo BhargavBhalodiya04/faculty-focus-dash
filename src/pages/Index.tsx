@@ -46,7 +46,7 @@ const Index = () => {
             <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
               <Camera className="h-4 w-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-foreground">ICT Smart Attendance System</h1>
+            <h1 className="text-xl font-bold text-foreground">Faculty Focus</h1>
           </div>
           <Link to="/login">
             <Button className="gradient-primary">
@@ -64,7 +64,8 @@ const Index = () => {
             Smart Attendance Management
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Advanced attendance system developed by IT department. A system built to take attendance easily and efficiently
+            Advanced facial recognition powered by AWS services for seamless, 
+            accurate, and efficient student attendance tracking.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -74,6 +75,9 @@ const Index = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
+            <Button size="lg" variant="outline">
+              View Demo
+            </Button>
           </div>
 
           {/* Quick Stats */}
@@ -102,7 +106,7 @@ const Index = () => {
             Ready to Get Started?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Access faculty dashboard and start managing attendance 
+            Access your faculty dashboard and start managing attendance 
             with advanced facial recognition technology.
           </p>
           <Link to="/login">
@@ -124,7 +128,7 @@ const Index = () => {
             <span className="font-semibold text-foreground">Faculty Focus</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Smart Attendance Management • Bhargav Bhalodiya - Sem 7 
+            Smart Attendance Management • Powered by AWS Services
           </p>
         </div>
       </footer>
