@@ -48,7 +48,7 @@ const Index = () => {
             </div>
             <h1 className="text-xl font-bold text-foreground">Faculty Focus</h1>
           </div>
-          <Link to="/dashboard">
+          <Link to="/login">
             <Button className="gradient-primary">
               Access Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -69,7 +69,7 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link to="/dashboard">
+            <Link to="/login">
               <Button size="lg" className="gradient-primary px-8">
                 Launch Dashboard
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -109,7 +109,7 @@ const Index = () => {
             Access your faculty dashboard and start managing attendance 
             with advanced facial recognition technology.
           </p>
-          <Link to="/dashboard">
+          <Link to="/login">
             <Button size="lg" className="gradient-primary px-8">
               Access Faculty Dashboard
               <ArrowRight className="ml-2 h-5 w-5" />
