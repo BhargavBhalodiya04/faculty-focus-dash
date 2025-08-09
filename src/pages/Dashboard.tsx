@@ -113,7 +113,7 @@ const Dashboard = () => {
                 Welcome to Faculty Dashboard
               </h2>
               <p className="text-lg text-muted-foreground">
-                Comprehensive attendance management powered by AWS services
+                Comprehensive attendance management powered by ICT Department
               </p>
             </div>
 
