@@ -155,30 +155,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* System Integration Info */}
-            <div className="dashboard-card">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">System Integration</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <h4 className="font-medium text-foreground mb-2">AWS Services</h4>
-                  <ul className="space-y-1 text-muted-foreground">
-                    <li>• S3 Bucket: Student face storage</li>
-                    <li>• Rekognition: Face recognition API</li>
-                    <li>• DynamoDB: Attendance data</li>
-                    <li>• EC2: Application hosting</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-foreground mb-2">Backend Integration</h4>
-                  <ul className="space-y-1 text-muted-foreground">
-                    <li>• Flask Python backend</li>
-                    <li>• Real-time face recognition</li>
-                    <li>• Excel report generation</li>
-                    <li>• Batch processing support</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
           </div>
         );
     }
