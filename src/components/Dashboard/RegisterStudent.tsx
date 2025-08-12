@@ -55,10 +55,9 @@ function UploadImage() {
         setStudentName("");
         setErNumber("");
         setBatchName("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = null;
-      }
-
+        if (fileInputRef.current) {
+          fileInputRef.current.value = null;
+        }
       } else {
         setError("❌ Upload failed: " + (data.error || "Unknown error"));
         setMessage(null);
@@ -77,48 +76,76 @@ function UploadImage() {
       onSubmit={handleSubmit}
       style={{
         maxWidth: 400,
-        margin: "auto",
-        padding: 20,
-        border: "1px solid #ccc",
-        borderRadius: 8,
+        margin: "2rem auto",
+        padding: "2rem",
+        border: "1px solid #ddd",
+        borderRadius: 10,
+        boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        backgroundColor: "#fff",
       }}
     >
-      <h2>Upload Student Image</h2>
+      <h2
+        style={{
+          textAlign: "center",
+          marginBottom: "1.5rem",
+          color: "#333",
+          fontWeight: "700",
+          fontSize: "1.8rem",
+        }}
+      >
+        Upload Student Image
+      </h2>
 
-      <input
-        type="text"
-        placeholder="Student Name"
-        value={studentName}
-        onChange={(e) => setStudentName(e.target.value)}
-        required
-      />
-      <br />
-
-      <input
-        type="text"
-        placeholder="ER Number"
-        value={erNumber}
-        onChange={(e) => setErNumber(e.target.value)}
-        required
-      />
-      <br />
-
-      <input
-        type="text"
-        placeholder="Batch Name"
-        value={batchName}
-        onChange={(e) => setBatchName(e.target.value)}
-        required
-      />
-      <br />
-
-      <input
-        type="text"
-        placeholder="Bucket Name"
-        value={bucketName}
-        onChange={(e) => setBucketName(e.target.value)}
-      />
-      <br />
+      {[{
+        placeholder: "Student Name",
+        value: studentName,
+        onChange: (e) => setStudentName(e.target.value),
+        required: true,
+        type: "text",
+        key: "name"
+      }, {
+        placeholder: "ER Number",
+        value: erNumber,
+        onChange: (e) => setErNumber(e.target.value),
+        required: true,
+        type: "text",
+        key: "er"
+      }, {
+        placeholder: "Batch Name",
+        value: batchName,
+        onChange: (e) => setBatchName(e.target.value),
+        required: true,
+        type: "text",
+        key: "batch"
+      }, {
+        placeholder: "Bucket Name",
+        value: bucketName,
+        onChange: (e) => setBucketName(e.target.value),
+        required: false,
+        type: "text",
+        key: "bucket"
+      }].map(({ placeholder, value, onChange, required, type, key }) => (
+        <input
+          key={key}
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          required={required}
+          style={{
+            width: "100%",
+            padding: "0.6rem 0.75rem",
+            marginBottom: "1.2rem",
+            borderRadius: 6,
+            border: "1.5px solid #ccc",
+            fontSize: "1rem",
+            transition: "border-color 0.3s ease",
+          }}
+          onFocus={(e) => (e.target.style.borderColor = "#4a90e2")}
+          onBlur={(e) => (e.target.style.borderColor = "#ccc")}
+        />
+      ))}
 
       <input
         ref={fileInputRef}
@@ -126,15 +153,62 @@ function UploadImage() {
         onChange={(e) => setFile(e.target.files[0])}
         accept="image/*"
         required
+        style={{
+          marginBottom: "1.5rem",
+          cursor: "pointer",
+        }}
       />
-      <br />
 
-      <button type="submit" disabled={loading}>
+      <button
+        type="submit"
+        disabled={loading}
+        style={{
+          width: "100%",
+          padding: "0.75rem",
+          fontSize: "1.1rem",
+          backgroundColor: loading ? "#7ea1d6" : "#4a90e2",
+          color: "#fff",
+          fontWeight: "600",
+          border: "none",
+          borderRadius: 6,
+          cursor: loading ? "not-allowed" : "pointer",
+          boxShadow: "0 3px 6px rgba(74, 144, 226, 0.6)",
+          transition: "background-color 0.3s ease",
+        }}
+        onMouseEnter={e => {
+          if (!loading) e.currentTarget.style.backgroundColor = "#357ABD";
+        }}
+        onMouseLeave={e => {
+          if (!loading) e.currentTarget.style.backgroundColor = "#4a90e2";
+        }}
+      >
         {loading ? "Uploading..." : "Upload"}
       </button>
 
-      {message && <p style={{ color: "green", marginTop: 10 }}>{message}</p>}
-      {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
+      {message && (
+        <p
+          style={{
+            color: "green",
+            marginTop: "1rem",
+            fontWeight: "600",
+            textAlign: "center",
+          }}
+        >
+          {message}
+        </p>
+      )}
+      {error && (
+        <p
+          style={{
+            color: "red",
+            marginTop: "1rem",
+            fontWeight: "600",
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </p>
+      )}
     </form>
   );
 }
