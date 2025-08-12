@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Upload } from "lucide-react";
 
-// Configure your Flask backend URL here
-const FLASK_BACKEND_URL = "http://127.0.0.1:5000"; // Change this to your Flask server URL
+// IMPORTANT: Your Flask backend must be deployed with HTTPS to work with this frontend
+// Local development: Use ngrok or deploy to Heroku/Railway for testing
+const FLASK_BACKEND_URL = "https://your-flask-app.herokuapp.com"; // Replace with your deployed Flask URL
 
 const RegisterStudent = () => {
   const { toast } = useToast();
@@ -228,8 +229,26 @@ const RegisterStudent = () => {
           </form>
         </CardContent>
       </Card>
-
-      {/* Backend Configuration Info */}
+      
+      {/* HTTPS Warning */}
+      <Card className="bg-destructive/10 border-destructive/20">
+        <CardHeader>
+          <CardTitle className="text-sm text-destructive">⚠️ HTTPS Required</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm space-y-2">
+          <p className="text-destructive">
+            Your Flask backend must use HTTPS to work with this frontend. HTTP localhost will be blocked by browsers.
+          </p>
+          <div className="space-y-1">
+            <p><strong>Quick Solutions:</strong></p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>Deploy to Heroku: <code>heroku create your-app-name</code></li>
+              <li>Use ngrok for local testing: <code>ngrok http 5000</code></li>
+              <li>Deploy to Railway.app (free tier available)</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
       <Card className="bg-muted/50">
         <CardHeader>
           <CardTitle className="text-sm">Backend Configuration</CardTitle>
