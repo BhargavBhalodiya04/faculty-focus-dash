@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Upload } from "lucide-react";
 
-// IMPORTANT: Your Flask backend must be deployed with HTTPS to work with this frontend
-// Local development: Use ngrok or deploy to Heroku/Railway for testing
-const FLASK_BACKEND_URL = "https://your-flask-app.herokuapp.com"; // Replace with your deployed Flask URL
+// IMPORTANT: Replace with your ngrok HTTPS URL when testing
+// Example: https://abc123.ngrok.io (from ngrok http 5000)
+const FLASK_BACKEND_URL = "https://your-ngrok-url.ngrok.io"; // Paste your ngrok URL here
 
 const RegisterStudent = () => {
   const { toast } = useToast();
