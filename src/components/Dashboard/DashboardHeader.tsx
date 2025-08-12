@@ -18,7 +18,7 @@ export const DashboardHeader = () => {
             <Camera className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Faculty Focus</h1>
+            <h1 className="text-2xl font-bold text-foreground">Attendance Management</h1>
             <p className="text-sm text-muted-foreground">Attendance Management System</p>
           </div>
         </div>

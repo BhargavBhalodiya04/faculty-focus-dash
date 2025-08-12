@@ -1,17 +1,37 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, ChangeEvent, FormEvent } from "react";
 
-function UploadImage() {
-  const [file, setFile] = useState(null);
+interface UploadResponse {
+  success: boolean;
+  results?: string[];
+  student?: {
+    batch_name: string;
+    bucket_name: string;
+    er_number: string;
+    name: string;
+  };
+  message?: string;
+  error?: string;
+}
+
+const RegisterStudent: React.FC = () => {
+  const [file, setFile] = useState<File | null>(null);
   const [studentName, setStudentName] = useState("");
   const [erNumber, setErNumber] = useState("");
   const [batchName, setBatchName] = useState("");
-  const [bucketName, setBucketName] = useState("ict-attendance"); // default bucket
+  const [bucketName, setBucketName] = useState("ict-attendance");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null); // success or error message
-  const [error, setError] = useState(null);
-  const fileInputRef = useRef();
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!file) {
@@ -21,48 +41,52 @@ function UploadImage() {
     }
 
     setLoading(true);
-    setMessage(null);
     setError(null);
+    setMessage(null);
 
     const formData = new FormData();
-    formData.append("images", file); // match backend 'images' key
-    formData.append("name", studentName); // match backend 'name' key
+    formData.append("images", file);
+    formData.append("name", studentName);
     formData.append("er_number", erNumber);
     formData.append("batch_name", batchName);
     formData.append("bucket_name", bucketName);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/upload-image", {
+      const response = await fetch("http://13.201.97.172:5000/upload-image", {
         method: "POST",
         body: formData,
-        credentials: "include", // send cookies/session
       });
 
-      let data;
+      // Read raw text once
+      const text = await response.text();
+      console.log("Raw response text:", text);
+
+      let data: UploadResponse;
       try {
-        data = await res.json();
+        data = JSON.parse(text);
       } catch {
+        console.error("Failed to parse JSON:", text);
         throw new Error("Server did not return valid JSON");
       }
 
-      if (res.ok) {
-        setMessage("✅ Upload successful!");
+      if (!response.ok || !data.success) {
+        setError("❌ Upload failed: " + (data.error || "Unknown error"));
+        setMessage(null);
+      } else {
+        setMessage(data.message || "✅ Upload successful!");
         setError(null);
-        console.log("Server response:", data);
+        console.log("Upload results:", data.results);
+        console.log("Student info:", data.student);
 
-        // Reset form fields and file input
+        // Reset form
         setFile(null);
         setStudentName("");
         setErNumber("");
         setBatchName("");
-        if (fileInputRef.current) {
-          fileInputRef.current.value = null;
-        }
-      } else {
-        setError("❌ Upload failed: " + (data.error || "Unknown error"));
-        setMessage(null);
+        setBucketName("ict-attendance");
+        if (fileInputRef.current) fileInputRef.current.value = "";
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("❌ Upload error: " + err.message);
       setMessage(null);
       console.error("Error uploading:", err);
@@ -70,6 +94,13 @@ function UploadImage() {
       setLoading(false);
     }
   };
+
+  const inputFields = [
+    { label: "Student Name", value: studentName, setValue: setStudentName, required: true },
+    { label: "ER Number", value: erNumber, setValue: setErNumber, required: true },
+    { label: "Batch Name", value: batchName, setValue: setBatchName, required: true },
+    { label: "Bucket Name", value: bucketName, setValue: setBucketName, required: false },
+  ];
 
   return (
     <form
@@ -97,42 +128,14 @@ function UploadImage() {
         Upload Student Image
       </h2>
 
-      {[{
-        placeholder: "Student Name",
-        value: studentName,
-        onChange: (e) => setStudentName(e.target.value),
-        required: true,
-        type: "text",
-        key: "name"
-      }, {
-        placeholder: "ER Number",
-        value: erNumber,
-        onChange: (e) => setErNumber(e.target.value),
-        required: true,
-        type: "text",
-        key: "er"
-      }, {
-        placeholder: "Batch Name",
-        value: batchName,
-        onChange: (e) => setBatchName(e.target.value),
-        required: true,
-        type: "text",
-        key: "batch"
-      }, {
-        placeholder: "Bucket Name",
-        value: bucketName,
-        onChange: (e) => setBucketName(e.target.value),
-        required: false,
-        type: "text",
-        key: "bucket"
-      }].map(({ placeholder, value, onChange, required, type, key }) => (
+      {inputFields.map(({ label, value, setValue, required }) => (
         <input
-          key={key}
-          type={type}
-          placeholder={placeholder}
+          key={label}
+          type="text"
+          placeholder={label}
           value={value}
-          onChange={onChange}
           required={required}
+          onChange={(e) => setValue(e.target.value)}
           style={{
             width: "100%",
             padding: "0.6rem 0.75rem",
@@ -150,7 +153,7 @@ function UploadImage() {
       <input
         ref={fileInputRef}
         type="file"
-        onChange={(e) => setFile(e.target.files[0])}
+        onChange={handleFileChange}
         accept="image/*"
         required
         style={{
@@ -175,10 +178,10 @@ function UploadImage() {
           boxShadow: "0 3px 6px rgba(74, 144, 226, 0.6)",
           transition: "background-color 0.3s ease",
         }}
-        onMouseEnter={e => {
+        onMouseEnter={(e) => {
           if (!loading) e.currentTarget.style.backgroundColor = "#357ABD";
         }}
-        onMouseLeave={e => {
+        onMouseLeave={(e) => {
           if (!loading) e.currentTarget.style.backgroundColor = "#4a90e2";
         }}
       >
@@ -193,6 +196,7 @@ function UploadImage() {
             fontWeight: "600",
             textAlign: "center",
           }}
+          role="alert"
         >
           {message}
         </p>
@@ -205,12 +209,13 @@ function UploadImage() {
             fontWeight: "600",
             textAlign: "center",
           }}
+          role="alert"
         >
           {error}
         </p>
       )}
     </form>
   );
-}
+};
 
-export default UploadImage;
+export default RegisterStudent;

@@ -65,7 +65,7 @@ const Index = () => {
             <div className="w-6 h-6 gradient-primary rounded flex items-center justify-center">
               <Camera className="h-3 w-3 text-white" />
             </div>
-            <span className="font-semibold text-foreground">Faculty Focus</span>
+            <span className="font-semibold text-foreground">Attendance Management</span>
           </div>
           <p className="text-sm text-muted-foreground">
             Smart Attendance Management • Bhargav Bhalodiya - Sem 7 

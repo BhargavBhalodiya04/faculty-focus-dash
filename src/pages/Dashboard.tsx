@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Users, 
   UserCheck, 
-  Camera, 
   BarChart3, 
   FileSpreadsheet, 
   BookOpen,
@@ -16,11 +15,52 @@ import { AttendanceAnalytics } from "@/components/Dashboard/AttendanceAnalytics"
 import { ReportsDownloads } from "@/components/Dashboard/ReportsDownloads";
 import { ClassOverview } from "@/components/Dashboard/ClassOverview";
 import RegisterStudent from "@/components/Dashboard/RegisterStudent";
+import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+
+
+// ⚠ Put these in .env for security (even though frontend keys are still public)
+const REGION = import.meta.env.VITE_AWS_REGION;
+const BUCKET_NAME = import.meta.env.VITE_AWS_BUCKET;
+const ACCESS_KEY = import.meta.env.VITE_AWS_ACCESS_KEY;
+const SECRET_KEY = import.meta.env.VITE_AWS_SECRET_KEY;
 
 type DashboardView = 'main' | 'students' | 'analytics' | 'reports' | 'classes' | 'register' | 'attendance';
 
 const Dashboard = () => {
   const [currentView, setCurrentView] = useState<DashboardView>('main');
+  const [totalStudents, setTotalStudents] = useState<number>(0);
+
+  // 🔹 Fetch student count from S3
+ useEffect(() => {
+  const fetchStudentsCount = async () => {
+    try {
+      console.log("Fetching from bucket:", BUCKET_NAME);
+
+      const s3 = new S3Client({
+        region: REGION,
+        credentials: {
+          accessKeyId: ACCESS_KEY,
+          secretAccessKey: SECRET_KEY,
+        },
+      });
+
+      const command = new ListObjectsV2Command({
+        Bucket: BUCKET_NAME,
+        Prefix: "ict-attendance/", // adjust folder if needed
+      });
+
+      const response = await s3.send(command);
+
+      console.log("S3 Response:", response);
+
+      const count = response.Contents ? response.Contents.length : 0;
+      setTotalStudents(count);
+    } catch (error) {
+      console.error("Error fetching student count:", error);
+    }
+  };
+    fetchStudentsCount();
+  }, []);
 
   const dashboardOptions = [
     {
@@ -44,7 +84,7 @@ const Dashboard = () => {
       description: "View all registered student images",
       icon: Users,
       variant: "success" as const,
-      stats: "247 Students", 
+      stats: `${totalStudents} Students`, 
       view: "students" as DashboardView
     },
     {
@@ -110,9 +150,9 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="dashboard-card text-center">
-                <div className="text-2xl font-bold text-primary">247</div>
+                <div className="text-2xl font-bold text-primary">{totalStudents}</div>
                 <p className="text-sm text-muted-foreground">Total Students</p>
               </div>
               <div className="dashboard-card text-center">
@@ -127,7 +167,7 @@ const Dashboard = () => {
                 <div className="text-2xl font-bold text-warning">15</div>
                 <p className="text-sm text-muted-foreground">Available Reports</p>
               </div>
-            </div>
+            </div> */}
 
             {/* Dashboard Options */}
             <div>
@@ -146,7 +186,6 @@ const Dashboard = () => {
                 ))}
               </div>
             </div>
-
           </div>
         );
     }
@@ -156,7 +195,6 @@ const Dashboard = () => {
     <div className="min-h-screen bg-dashboard-bg">
       <DashboardHeader />
       
-      {/* Navigation breadcrumb */}
       {currentView !== 'main' && (
         <div className="px-6 py-2 border-b border-border bg-card">
           <button
@@ -168,7 +206,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         {renderCurrentView()}
       </main>
