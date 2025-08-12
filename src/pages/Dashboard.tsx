@@ -15,6 +15,7 @@ import { StudentGallery } from "@/components/Dashboard/StudentGallery";
 import { AttendanceAnalytics } from "@/components/Dashboard/AttendanceAnalytics";
 import { ReportsDownloads } from "@/components/Dashboard/ReportsDownloads";
 import { ClassOverview } from "@/components/Dashboard/ClassOverview";
+import RegisterStudent from "@/components/Dashboard/RegisterStudent";
 
 type DashboardView = 'main' | 'students' | 'analytics' | 'reports' | 'classes' | 'register' | 'attendance';
 
@@ -83,16 +84,7 @@ const Dashboard = () => {
       case 'classes':
         return <ClassOverview />;
       case 'register':
-        return (
-          <div className="text-center py-20">
-            <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Register Student Feature</h3>
-            <p className="text-muted-foreground mb-4">This will integrate with your existing Python Flask registration system.</p>
-            <p className="text-sm text-muted-foreground">
-              Connect this interface to your <code>/upload-image</code> endpoint for seamless integration.
-            </p>
-          </div>
-        );
+        return <RegisterStudent />;
       case 'attendance':
         return (
           <div className="text-center py-20">
