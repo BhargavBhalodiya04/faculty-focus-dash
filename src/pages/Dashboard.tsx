@@ -16,7 +16,8 @@ import { ReportsDownloads } from "@/components/Dashboard/ReportsDownloads";
 import { ClassOverview } from "@/components/Dashboard/ClassOverview";
 import RegisterStudent from "@/components/Dashboard/RegisterStudent";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5000";
+// const API_BASE = import.meta.env.VITE_API_BASE || "http://15.206.75.171:5000/take_attendance";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://15.206.75.171:5000";
 
 type DashboardView =
   | "main"
@@ -68,17 +69,27 @@ const Dashboard = () => {
 
     const fd = new FormData();
     fd.append("batch_name", batchName);
-    fd.append("lab_name", className);
-    fd.append("subject_name", subject);
-    fd.append("class_image", groupImages[0]);
+    fd.append("class_name", className);        // match backend
+    fd.append("subject", subject);             // match backend
+
+    // append all selected files
+    if (groupImages) {
+      for (let i = 0; i < groupImages.length; i++) {
+        fd.append("group_images", groupImages[i]); // match backend
+      }
+    }
+
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/take_attendance`, {
+      const res = await fetch(`${API_BASE}/api/take_attendance`, {
         method: "POST",
         body: fd,
       });
+
+
       const data = await res.json();
+
       if (!data.success) {
         setErrorMsg(data.error || "Attendance failed");
       } else {
@@ -91,6 +102,7 @@ const Dashboard = () => {
     }
   };
 
+  // ✅ These must be OUTSIDE the handler
   const dashboardOptions = [
     {
       title: "Register Student",
@@ -177,10 +189,10 @@ const Dashboard = () => {
             multiple
             onChange={(e) => setGroupImages(e.target.files)}
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-blue-700
-            hover:file:bg-blue-100"
+          file:rounded-full file:border-0
+          file:text-sm file:font-semibold
+          file:bg-blue-50 file:text-blue-700
+          hover:file:bg-blue-100"
           />
           <p className="text-xs text-gray-500 mt-1">Upload one or more class/group photos.</p>
         </div>

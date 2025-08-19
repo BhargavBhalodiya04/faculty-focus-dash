@@ -52,7 +52,7 @@ const RegisterStudent: React.FC = () => {
     formData.append("bucket_name", bucketName);
 
     try {
-      const response = await fetch("http://13.201.97.172:5000/upload-image", {
+      const response = await fetch("http://15.206.75.171:5000/upload-image", {
         method: "POST",
         body: formData,
       });
