@@ -13,7 +13,11 @@ interface UploadResponse {
   error?: string;
 }
 
-const RegisterStudent: React.FC = () => {
+interface RegisterStudentProps {
+  onStudentAdded?: () => void; // 🔥 callback from Dashboard
+}
+
+const RegisterStudent: React.FC<RegisterStudentProps> = ({ onStudentAdded }) => {
   const [file, setFile] = useState<File | null>(null);
   const [studentName, setStudentName] = useState("");
   const [erNumber, setErNumber] = useState("");
@@ -22,6 +26,7 @@ const RegisterStudent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedStudent, setUploadedStudent] = useState<string | null>(null); // 👈 to display student name
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +48,7 @@ const RegisterStudent: React.FC = () => {
     setLoading(true);
     setError(null);
     setMessage(null);
+    setUploadedStudent(null);
 
     const formData = new FormData();
     formData.append("images", file);
@@ -57,7 +63,6 @@ const RegisterStudent: React.FC = () => {
         body: formData,
       });
 
-      // Read raw text once
       const text = await response.text();
       console.log("Raw response text:", text);
 
@@ -78,7 +83,15 @@ const RegisterStudent: React.FC = () => {
         console.log("Upload results:", data.results);
         console.log("Student info:", data.student);
 
-        // Reset form
+        // 🔥 Store uploaded student name to show below form
+        if (data.student?.name) {
+          setUploadedStudent(data.student.name);
+        }
+
+        // 🔥 Notify Dashboard to update student count
+        if (onStudentAdded) onStudentAdded();
+
+        // Reset form fields
         setFile(null);
         setStudentName("");
         setErNumber("");
@@ -212,6 +225,21 @@ const RegisterStudent: React.FC = () => {
           role="alert"
         >
           {error}
+        </p>
+      )}
+
+      {/* 👇 Show uploaded student name at bottom */}
+      {uploadedStudent && (
+        <p
+          style={{
+            marginTop: "1.5rem",
+            textAlign: "center",
+            fontWeight: "700",
+            fontSize: "1.1rem",
+            color: "#2c3e50",
+          }}
+        >
+          🎓 Registered Student: <span style={{ color: "#4a90e2" }}>{uploadedStudent}</span>
         </p>
       )}
     </form>

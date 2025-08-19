@@ -16,7 +16,6 @@ import { ReportsDownloads } from "@/components/Dashboard/ReportsDownloads";
 import { ClassOverview } from "@/components/Dashboard/ClassOverview";
 import RegisterStudent from "@/components/Dashboard/RegisterStudent";
 
-// const API_BASE = import.meta.env.VITE_API_BASE || "http://15.206.75.171:5000/take_attendance";
 const API_BASE = import.meta.env.VITE_API_BASE || "http://15.206.75.171:5000";
 
 type DashboardView =
@@ -40,19 +39,22 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // ✅ Fetch students count
+  const fetchStudentsCount = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/students/count`);
+      const data = await res.json();
+      setTotalStudents(data.count || 0);
+    } catch (err) {
+      console.error("Error fetching student count:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchStudentsCount = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/students/count`);
-        const data = await res.json();
-        setTotalStudents(data.count || 0);
-      } catch (err) {
-        console.error("Error fetching student count:", err);
-      }
-    };
     fetchStudentsCount();
   }, []);
 
+  // ✅ Handle Attendance Submission
   const handleAttendanceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -69,16 +71,12 @@ const Dashboard = () => {
 
     const fd = new FormData();
     fd.append("batch_name", batchName);
-    fd.append("class_name", className);        // match backend
-    fd.append("subject", subject);             // match backend
+    fd.append("class_name", className);
+    fd.append("subject", subject);
 
-    // append all selected files
-    if (groupImages) {
-      for (let i = 0; i < groupImages.length; i++) {
-        fd.append("group_images", groupImages[i]); // match backend
-      }
+    for (let i = 0; i < groupImages.length; i++) {
+      fd.append("group_images", groupImages[i]);
     }
-
 
     setLoading(true);
     try {
@@ -86,7 +84,6 @@ const Dashboard = () => {
         method: "POST",
         body: fd,
       });
-
 
       const data = await res.json();
 
@@ -102,14 +99,14 @@ const Dashboard = () => {
     }
   };
 
-  // ✅ These must be OUTSIDE the handler
+  // ✅ Dashboard Options
   const dashboardOptions = [
     {
       title: "Register Student",
       description: "Add new student faces to the system",
       icon: Plus,
       variant: "primary" as const,
-      stats: "Active",
+      stats: `${totalStudents} Students`,
       view: "register" as DashboardView,
     },
     {
@@ -146,17 +143,19 @@ const Dashboard = () => {
     },
   ];
 
+  // ✅ Attendance Form + Results
   const renderAttendanceView = () => (
     <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md border">
       <h3 className="text-2xl font-semibold mb-6">Take Attendance</h3>
 
       <form onSubmit={handleAttendanceSubmit} className="space-y-6">
+        {/* Batch / Class / Subject */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium mb-2">Batch Name</label>
             <input
               className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., 1234-1234"
+              placeholder="e.g., 2021-2025"
               value={batchName}
               onChange={(e) => setBatchName(e.target.value)}
             />
@@ -181,22 +180,28 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* File Upload */}
         <div>
-          <label className="block text-sm font-medium mb-2">Upload Class Photo</label>
+          <label className="block text-sm font-medium mb-2">
+            Upload Class Photo
+          </label>
           <input
             type="file"
             accept=".jpg,.jpeg,.png"
             multiple
             onChange={(e) => setGroupImages(e.target.files)}
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-          file:rounded-full file:border-0
-          file:text-sm file:font-semibold
-          file:bg-blue-50 file:text-blue-700
-          hover:file:bg-blue-100"
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100"
           />
-          <p className="text-xs text-gray-500 mt-1">Upload one or more class/group photos.</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Upload one or more class/group photos.
+          </p>
         </div>
 
+        {/* Errors */}
         {errorMsg && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-md">
             {errorMsg}
@@ -212,26 +217,57 @@ const Dashboard = () => {
         </button>
       </form>
 
+      {/* ✅ Attendance Result */}
       {attendanceResult && (
-        <div className="mt-8 bg-gray-50 p-6 rounded-lg border">
-          <h4 className="font-semibold mb-4">Present Students</h4>
-          {attendanceResult.present?.length === 0 ? (
-            <p className="text-sm text-gray-500">No matches found.</p>
+        <div className="mt-10 bg-gray-50 p-6 rounded-lg border">
+          <h4 className="font-semibold mb-4 text-lg">Attendance Result</h4>
+
+          {/* Present Students */}
+          <h5 className="font-medium mb-2">Present Students</h5>
+          {attendanceResult.present && attendanceResult.present.length > 0 ? (
+            <table className="w-full border border-gray-300 rounded-lg mb-6">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border px-4 py-2 text-left">#</th>
+                  <th className="border px-4 py-2 text-left">Student Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceResult.present.map(
+                  (fullName: string, idx: number) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="border px-4 py-2">{idx + 1}</td>
+                      <td className="border px-4 py-2">{fullName}</td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
           ) : (
-            <ul className="list-disc ml-6 space-y-1">
-              {attendanceResult.present.map((fullName: string, idx: number) => (
-                <li key={idx} className="font-medium">
-                  {fullName}
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-gray-500 mb-6">No students detected.</p>
           )}
+
+          {/* Absent Students */}
+          {attendanceResult.absent && attendanceResult.absent.length > 0 && (
+            <>
+              <h5 className="font-medium mb-2">Absent Students</h5>
+              <ul className="list-disc list-inside text-sm text-red-600 mb-6">
+                {attendanceResult.absent.map((name: string, idx: number) => (
+                  <li key={idx}>{name}</li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {/* Report Link */}
           {attendanceResult.report_url && (
             <a
-              className="inline-block mt-4 text-blue-600 hover:underline"
+              className="inline-block mt-2 text-blue-600 hover:underline"
               href={`${API_BASE}${attendanceResult.report_url}`}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Download Excel Report
+              📥 Download Excel Report
             </a>
           )}
         </div>
@@ -239,6 +275,7 @@ const Dashboard = () => {
     </div>
   );
 
+  // ✅ Handle View Switching
   const renderCurrentView = () => {
     switch (currentView) {
       case "students":
@@ -250,7 +287,7 @@ const Dashboard = () => {
       case "classes":
         return <ClassOverview />;
       case "register":
-        return <RegisterStudent />;
+        return <RegisterStudent onStudentAdded={fetchStudentsCount} />;
       case "attendance":
         return renderAttendanceView();
       default:
