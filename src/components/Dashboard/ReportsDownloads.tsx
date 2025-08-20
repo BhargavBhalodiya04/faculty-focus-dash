@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, FileSpreadsheet, Calendar, Filter, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,81 +19,82 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import * as XLSX from "xlsx";
 
-// Mock data for attendance reports
-const attendanceReports = [
-  {
-    id: "1",
-    fileName: "Attendance_2024_Jan_2021-2024.xlsx",
-    batch: "2021-2024",
-    subject: "Mathematics",
-    date: "2024-01-15",
-    size: "2.5 MB",
-    records: 450,
-    status: "ready"
-  },
-  {
-    id: "2", 
-    fileName: "Attendance_2024_Jan_2022-2025.xlsx",
-    batch: "2022-2025", 
-    subject: "Physics",
-    date: "2024-01-14",
-    size: "1.8 MB",
-    records: 380,
-    status: "ready"
-  },
-  {
-    id: "3",
-    fileName: "Attendance_2024_Dec_2021-2024.xlsx",
-    batch: "2021-2024",
-    subject: "Chemistry", 
-    date: "2024-01-10",
-    size: "3.1 MB",
-    records: 520,
-    status: "ready"
-  },
-  {
-    id: "4",
-    fileName: "Attendance_2024_Jan_2020-2023.xlsx",
-    batch: "2020-2023",
-    subject: "Computer Science",
-    date: "2024-01-08",
-    size: "2.8 MB", 
-    records: 480,
-    status: "generating"
-  }
-];
+// ✅ Attendance report type
+interface AttendanceReport {
+  id: string;
+  fileName: string;
+  batch: string;
+  subject: string;
+  date: string;
+  size: string;
+  records: number;
+  status: string;
+  students: string[];
+}
 
 export const ReportsDownloads = () => {
+  const [attendanceReports, setAttendanceReports] = useState<AttendanceReport[]>([]);
   const [selectedBatch, setSelectedBatch] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredReports = attendanceReports.filter(report => {
+  // ✅ Load live attendance data from localStorage
+  useEffect(() => {
+    const storedAttendance = localStorage.getItem("attendanceData");
+    if (storedAttendance) {
+      const parsed = JSON.parse(storedAttendance);
+
+      // Convert into report format
+      const newReport: AttendanceReport = {
+        id: Date.now().toString(),
+        fileName: `Attendance_${new Date().toISOString().split("T")[0]}.xlsx`,
+        batch: parsed.batch || "Unknown",
+        subject: parsed.subject || "Unknown",
+        date: new Date().toISOString(),
+        size: `${(JSON.stringify(parsed.students).length / 1024).toFixed(1)} KB`,
+        records: parsed.students.length,
+        status: "ready",
+        students: parsed.students,
+      };
+
+      setAttendanceReports([newReport]); // for now show latest attendance only
+    }
+  }, []);
+
+  const filteredReports = attendanceReports.filter((report) => {
     const matchesBatch = selectedBatch === "all" || report.batch === selectedBatch;
     const matchesSubject = selectedSubject === "all" || report.subject === selectedSubject;
-    const matchesSearch = report.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.subject.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      report.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.subject.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesBatch && matchesSubject && matchesSearch;
   });
 
-  const batches = [...new Set(attendanceReports.map(report => report.batch))];
-  const subjects = [...new Set(attendanceReports.map(report => report.subject))];
+  const batches = [...new Set(attendanceReports.map((report) => report.batch))];
+  const subjects = [...new Set(attendanceReports.map((report) => report.subject))];
 
-  const handleDownload = (fileName: string) => {
-    // Mock download functionality
-    console.log(`Downloading ${fileName}`);
-    // In real implementation, this would trigger the actual download
+  // ✅ Download as Excel
+  const handleDownload = (report: AttendanceReport) => {
+    const wsData = [
+      ["#", "Student Name"], // Header
+      ...report.students.map((s, i) => [i + 1, s]),
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+
+    XLSX.writeFile(wb, report.fileName);
   };
 
-  const handlePreview = (fileName: string) => {
-    // Mock preview functionality
-    console.log(`Previewing ${fileName}`);
+  const handlePreview = (report: AttendanceReport) => {
+    alert(`Present Students:\n${report.students.join("\n")}`);
   };
 
   const handleGenerateReport = () => {
-    // Mock report generation
-    console.log("Generating new report...");
+    alert("Generating new report... (not implemented yet)");
   };
 
   return (
@@ -128,7 +129,9 @@ export const ReportsDownloads = () => {
             <Download className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">10.2 MB</div>
+            <div className="text-2xl font-bold">
+              {attendanceReports.reduce((sum, r) => sum + parseFloat(r.size), 0).toFixed(1)} KB
+            </div>
             <p className="text-xs text-muted-foreground">Combined file size</p>
           </CardContent>
         </Card>
@@ -139,7 +142,9 @@ export const ReportsDownloads = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,830</div>
+            <div className="text-2xl font-bold">
+              {attendanceReports.reduce((sum, r) => sum + r.records, 0)}
+            </div>
             <p className="text-xs text-muted-foreground">Total attendance records</p>
           </CardContent>
         </Card>
@@ -150,7 +155,9 @@ export const ReportsDownloads = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Today</div>
+            <div className="text-2xl font-bold">
+              {attendanceReports.length > 0 ? "Today" : "-"}
+            </div>
             <p className="text-xs text-muted-foreground">Last generated</p>
           </CardContent>
         </Card>
@@ -171,8 +178,10 @@ export const ReportsDownloads = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Batches</SelectItem>
-            {batches.map(batch => (
-              <SelectItem key={batch} value={batch}>{batch}</SelectItem>
+            {batches.map((batch) => (
+              <SelectItem key={batch} value={batch}>
+                {batch}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -182,8 +191,10 @@ export const ReportsDownloads = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Subjects</SelectItem>
-            {subjects.map(subject => (
-              <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+            {subjects.map((subject) => (
+              <SelectItem key={subject} value={subject}>
+                {subject}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -230,7 +241,7 @@ export const ReportsDownloads = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handlePreview(report.fileName)}
+                        onClick={() => handlePreview(report)}
                         disabled={report.status !== "ready"}
                       >
                         <Eye className="h-3 w-3" />
@@ -238,7 +249,7 @@ export const ReportsDownloads = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDownload(report.fileName)}
+                        onClick={() => handleDownload(report)}
                         disabled={report.status !== "ready"}
                       >
                         <Download className="h-3 w-3" />
@@ -260,3 +271,4 @@ export const ReportsDownloads = () => {
     </div>
   );
 };
+// I have to make attendance Reports & Downloads in this faculty download the attendance report
