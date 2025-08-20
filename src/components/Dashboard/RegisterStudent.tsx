@@ -30,12 +30,14 @@ const RegisterStudent: React.FC<RegisterStudentProps> = ({ onStudentAdded }) => 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Handle file input change
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
     }
   };
 
+  // Handle form submit
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -108,6 +110,7 @@ const RegisterStudent: React.FC<RegisterStudentProps> = ({ onStudentAdded }) => 
     }
   };
 
+  // Input fields list
   const inputFields = [
     { label: "Student Name", value: studentName, setValue: setStudentName, required: true },
     { label: "ER Number", value: erNumber, setValue: setErNumber, required: true },
@@ -239,7 +242,8 @@ const RegisterStudent: React.FC<RegisterStudentProps> = ({ onStudentAdded }) => 
             color: "#2c3e50",
           }}
         >
-          🎓 Registered Student: <span style={{ color: "#4a90e2" }}>{uploadedStudent}</span>
+          🎓 Registered Student:{" "}
+          <span style={{ color: "#4a90e2" }}>{uploadedStudent}</span>
         </p>
       )}
     </form>

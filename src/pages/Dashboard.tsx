@@ -42,7 +42,7 @@ const Dashboard = () => {
   // ✅ Fetch students count
   const fetchStudentsCount = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/students/count`);
+      const res = await fetch(`${API_BASE}/students/count`);
       const data = await res.json();
       setTotalStudents(data.count || 0);
     } catch (err) {
@@ -54,7 +54,6 @@ const Dashboard = () => {
     fetchStudentsCount();
   }, []);
 
-  // ✅ Handle Attendance Submission
   const handleAttendanceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -64,23 +63,20 @@ const Dashboard = () => {
       setErrorMsg("Please select at least one group image.");
       return;
     }
-    if (!batchName || !className || !subject) {
-      setErrorMsg("Batch, Class, and Subject are required.");
+    if (!batchName || !subject) {
+      setErrorMsg("Batch and Subject are required.");
       return;
     }
 
     const fd = new FormData();
-    fd.append("batch_name", batchName);
-    fd.append("class_name", className);
-    fd.append("subject", subject);
-
-    for (let i = 0; i < groupImages.length; i++) {
-      fd.append("group_images", groupImages[i]);
-    }
+    fd.append("batch_name", batchName);          // ✅ Flask expects this
+    fd.append("subject_name", subject);          // ✅ Flask expects this
+    fd.append("lab_name", className || "");      // ✅ optional, maps your className
+    fd.append("class_image", groupImages[0]);    // ✅ Flask only uses one file
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/take_attendance`, {
+      const res = await fetch(`${API_BASE}/take_attendance`, {
         method: "POST",
         body: fd,
       });
