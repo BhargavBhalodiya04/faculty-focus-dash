@@ -69,10 +69,14 @@ const Dashboard = () => {
     }
 
     const fd = new FormData();
-    fd.append("batch_name", batchName);          // ✅ Flask expects this
-    fd.append("subject_name", subject);          // ✅ Flask expects this
-    fd.append("lab_name", className || "");      // ✅ optional, maps your className
-    fd.append("class_image", groupImages[0]);    // ✅ Flask only uses one file
+    fd.append("batch_name", batchName);
+    fd.append("subject_name", subject);
+    fd.append("lab_name", className || "");
+
+    // ✅ Append all uploaded images
+    Array.from(groupImages).forEach((file, idx) => {
+      fd.append("class_images", file);  // use same key for multiple files
+    });
 
     setLoading(true);
     try {
