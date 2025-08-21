@@ -30,6 +30,7 @@ type DashboardView =
 const Dashboard = () => {
   const [currentView, setCurrentView] = useState<DashboardView>("main");
   const [totalStudents, setTotalStudents] = useState<number>(0);
+  const [totalReports, setTotalReports] = useState<number>(0);
 
   const [batchName, setBatchName] = useState("");
   const [className, setClassName] = useState("");
@@ -50,8 +51,20 @@ const Dashboard = () => {
     }
   };
 
+  // ✅ Fetch reports count
+  const fetchReportsCount = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/reports`);
+      const data = await res.json();
+      setTotalReports(data.length || 0);
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+    }
+  };
+
   useEffect(() => {
     fetchStudentsCount();
+    fetchReportsCount();
   }, []);
 
   const handleAttendanceSubmit = async (e: React.FormEvent) => {
@@ -75,7 +88,7 @@ const Dashboard = () => {
 
     // ✅ Append all uploaded images
     Array.from(groupImages).forEach((file, idx) => {
-      fd.append("class_images", file);  // use same key for multiple files
+      fd.append("class_images", file);
     });
 
     setLoading(true);
@@ -130,7 +143,7 @@ const Dashboard = () => {
       description: "Download Excel files and attendance reports",
       icon: FileSpreadsheet,
       variant: "warning" as const,
-      stats: "—",
+      stats: `${totalReports} Reports`, // ✅ Show total reports here
       view: "reports" as DashboardView,
     },
     {
