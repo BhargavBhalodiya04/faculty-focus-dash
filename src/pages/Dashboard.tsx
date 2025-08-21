@@ -12,7 +12,7 @@ import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
 import { DashboardCard } from "@/components/Dashboard/DashboardCard";
 import { StudentGallery } from "@/components/Dashboard/StudentGallery";
 import { AttendanceAnalytics } from "@/components/Dashboard/AttendanceAnalytics";
-import { ReportsDownloads } from "@/components/Dashboard/ReportsDownloads";
+import ReportsDownloads from "@/components/Dashboard/ReportsDownloads";
 import { ClassOverview } from "@/components/Dashboard/ClassOverview";
 import RegisterStudent from "@/components/Dashboard/RegisterStudent";
 
