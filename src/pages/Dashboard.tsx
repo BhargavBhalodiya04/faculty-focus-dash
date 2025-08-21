@@ -161,7 +161,7 @@ const Dashboard = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Class Name</label>
+            <label className="block text-sm font-medium mb-2">Division Name</label>
             <input
               className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g., A"
@@ -228,7 +228,7 @@ const Dashboard = () => {
             <table className="w-full border border-gray-300 rounded-lg mb-6">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border px-4 py-2 text-left">#</th>
+                  <th className="border px-4 py-2 text-left">Number</th>
                   <th className="border px-4 py-2 text-left">Student Name</th>
                 </tr>
               </thead>
