@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import {Navigate} from "react-router-dom";
 
 const queryClient = new QueryClient();
 
@@ -19,20 +20,25 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {/* <Route path="/" element={<Index />} /> */}
-            <Route path="/login" element={<Login />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+
+<Routes>
+  {/* Redirect "/" to "/login" */}
+  <Route path="/" element={<Navigate to="/login" replace />} />
+
+  <Route path="/login" element={<Login />} />
+  <Route 
+    path="/dashboard" 
+    element={
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    } 
+  />
+  
+  {/* Catch-all for 404 */}
+  <Route path="*" element={<NotFound />} />
+</Routes>
+
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
