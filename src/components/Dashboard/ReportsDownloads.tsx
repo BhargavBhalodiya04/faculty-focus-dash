@@ -161,12 +161,18 @@ export default function ReportsPage() {
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
+                
                 <TableBody>
                   {reports.map((report) => (
                     <TableRow key={report.id}>
                       <TableCell>{report.fileName}</TableCell>
-                      <TableCell>{report.batch}</TableCell>
-                      <TableCell>{report.subject}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{report.batch}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{report.subject}</Badge>
+                      </TableCell>
+
                       <TableCell>
                         {new Date(report.date).toLocaleString()}
                       </TableCell>
