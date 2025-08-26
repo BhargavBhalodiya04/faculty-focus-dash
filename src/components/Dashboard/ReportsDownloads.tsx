@@ -15,6 +15,7 @@ import {
 interface Report {
   id: string;
   fileName: string;
+  userFriendlyName: string;
   size: string;
   records: number;
   status: string;
@@ -36,7 +37,7 @@ export default function ReportsPage() {
   const [latest, setLatest] = useState("-");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/reports")
+    fetch("http://15.206.75.171:5000/api/reports")
       .then((res) => res.json())
       .then((data: Report[]) => {
         setReports(data);
@@ -83,7 +84,6 @@ export default function ReportsPage() {
               <FileSpreadsheet className="w-6 h-6" /> Reports & Downloads
             </h1>
           </div>
-          <Button>Generate New Report</Button>
         </div>
         <p className="text-gray-500 mb-6">
           Download attendance reports and Excel files
@@ -161,11 +161,11 @@ export default function ReportsPage() {
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                
+
                 <TableBody>
                   {reports.map((report) => (
                     <TableRow key={report.id}>
-                      <TableCell>{report.fileName}</TableCell>
+                      <TableCell>{report.userFriendlyName || report.fileName}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{report.batch}</Badge>
                       </TableCell>

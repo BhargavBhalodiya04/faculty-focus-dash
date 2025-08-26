@@ -280,7 +280,6 @@ const Dashboard = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              📥 Download Excel Report
             </a>
           )}
         </div>
