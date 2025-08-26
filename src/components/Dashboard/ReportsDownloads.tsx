@@ -62,226 +62,239 @@ function parseFromFileName(fileName: string) {
   };
 }
 
-  export default function ReportsPage() {
-    const [reports, setReports] = useState<Report[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function ReportsPage() {
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    // Stats
-    const [totalReports, setTotalReports] = useState(0);
-    const [totalSize, setTotalSize] = useState("0 KB");
-    const [totalRecords, setTotalRecords] = useState(0);
-    const [latest, setLatest] = useState("-");
+  // Stats
+  const [totalReports, setTotalReports] = useState(0);
+  const [totalSize, setTotalSize] = useState("0 KB");
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [latest, setLatest] = useState("-");
 
-    // 🔍 Filter state
-    const [search, setSearch] = useState("");
+  // 🔍 Filter state
+  const [search, setSearch] = useState("");
+  const [selectedBatch, setSelectedBatch] = useState("All");
+  const [selectedSubject, setSelectedSubject] = useState("All");
+
+  useEffect(() => {
+    fetch("http://15.206.75.171:5000/api/reports")
+      .then((res) => res.json())
+      .then((data: Report[]) => {
+        // Normalize: if backend didn't send class/subject/section/date, derive from fileName
+        const normalized = data.map((r) => {
+          const meta = parseFromFileName(r.userFriendlyName || r.fileName || "");
+          return {
+            ...r,
+            batch: meta.className || r.batch || "-",
+            subject: meta.subject || r.subject || "-",
+            section: meta.section || r.section || "-",
+            date: meta.date || r.date || "-",
+          } as Report;
+        });
 
 
-    useEffect(() => {
-      fetch("http://15.206.75.171:5000/api/reports")
-        .then((res) => res.json())
-        .then((data: Report[]) => {
-          // Normalize: if backend didn't send class/subject/section/date, derive from fileName
-          const normalized = data.map((r) => {
-            const meta = parseFromFileName(r.userFriendlyName || r.fileName || "");
-            return {
-              ...r,
-              batch: meta.className || r.batch || "-",
-              subject: meta.subject || r.subject || "-",
-              section: meta.section || r.section || "-",
-              date: meta.date || r.date || "-",
-            } as Report;
-          });
+        setReports(normalized);
 
+        // Total Reports
+        setTotalReports(normalized.length);
 
-          setReports(normalized);
+        // Total Size
+        const sizeInKB = normalized.reduce((acc, r) => {
+          const val = parseFloat(String(r.size).replace(/KB/i, "").trim());
+          return acc + (isNaN(val) ? 0 : val);
+        }, 0);
+        setTotalSize(sizeInKB.toFixed(1) + " KB");
 
-          // Total Reports
-          setTotalReports(normalized.length);
+        // Total Records
+        const recordsCount = normalized.reduce((acc, r) => acc + (Number(r.records) || 0), 0);
+        setTotalRecords(recordsCount);
 
-          // Total Size
-          const sizeInKB = normalized.reduce((acc, r) => {
-            const val = parseFloat(String(r.size).replace(/KB/i, "").trim());
-            return acc + (isNaN(val) ? 0 : val);
-          }, 0);
-          setTotalSize(sizeInKB.toFixed(1) + " KB");
+        // Latest Report Date
+        if (normalized.length > 0) {
+          const latestDate = new Date(
+            Math.max(
+              ...normalized.map((r) => new Date(r.date || 0).getTime())
+            )
+          );
+          setLatest(latestDate.toLocaleString());
+        }
 
-          // Total Records
-          const recordsCount = normalized.reduce((acc, r) => acc + (Number(r.records) || 0), 0);
-          setTotalRecords(recordsCount);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-          // Latest Report Date
-          if (normalized.length > 0) {
-            const latestDate = new Date(
-              Math.max(
-                ...normalized.map((r) => new Date(r.date || 0).getTime())
-              )
-            );
-            setLatest(latestDate.toLocaleString());
-          }
-
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }, []);
-
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <main className="container mx-auto px-6 py-8">
-          {/* Header Section */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex flex-col">
-              <button
-                onClick={() => window.history.back()}
-                className="text-sm text-blue-600 hover:text-blue-800 transition-colors mb-2 text-left"
-              >
-              </button>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <FileSpreadsheet className="w-6 h-6" /> Reports & Downloads
-              </h1>
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <main className="container mx-auto px-6 py-8">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col">
+            <button
+              onClick={() => window.history.back()}
+              className="text-sm text-blue-600 hover:text-blue-800 transition-colors mb-2 text-left"
+            >
+            </button>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <FileSpreadsheet className="w-6 h-6" /> Reports & Downloads
+            </h1>
           </div>
-          <p className="text-gray-500 mb-6">
-            Download attendance reports and Excel files
-          </p>
+        </div>
+        <p className="text-gray-500 mb-6">
+          Download attendance reports and Excel files
+        </p>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{totalReports}</p>
-                <p className="text-sm text-gray-500">Available files</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Size</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{totalSize}</p>
-                <p className="text-sm text-gray-500">Combined file size</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Records</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{totalRecords}</p>
-                <p className="text-sm text-gray-500">Total attendance records</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Latest</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg font-semibold">{latest}</p>
-                <p className="text-sm text-gray-500">Last generated</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Reports Table */}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader>
+              <CardTitle>Total Reports</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{totalReports}</p>
+              <p className="text-sm text-gray-500">Available files</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Size</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{totalSize}</p>
+              <p className="text-sm text-gray-500">Combined file size</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{totalRecords}</p>
+              <p className="text-sm text-gray-500">Total attendance records</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Latest</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg font-semibold">{latest}</p>
+              <p className="text-sm text-gray-500">Last generated</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Reports Table */}
+        <Card>
+          <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
               <CardTitle>Available Reports</CardTitle>
               <p className="text-gray-500 text-sm">
                 Download or preview attendance reports
               </p>
-              {/* 🔍 Filter Input */}
-              <div className="mt-3">
-                <input
-                  type="text"
-                  placeholder="Filter by batch, subject, division, or date..."
-                  className="w-full md:w-1/3 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+            </div>
+
+            {/* 🔽 Filters aligned right */}
+            <div className="flex gap-4 mt-3 md:mt-0">
+              {/* Batch Filter */}
+              <div>
+                <label className="mr-2 text-sm font-medium">Batch:</label>
+                <select
+                  className="border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedBatch}
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                >
+                  <option value="All">All</option>
+                  {[...new Set(reports.map((r) => r.batch))].map((batch) => (
+                    <option key={batch} value={batch}>
+                      {batch}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p>Loading...</p>
-              ) : reports.length === 0 ? (
-                <p className="text-gray-400">
-                  No reports found matching your criteria.
-                </p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Batch Name</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Division</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
 
-                  <TableBody>
-                    {reports
-                      .filter((r) =>
-                        [r.batch, r.subject, r.section, r.date]
-                          .join(" ")
-                          .toLowerCase()
-                          .includes(search.toLowerCase())
-                      )
-                      .map((report) => (
-                        <TableRow key={report.id}>
-                          {/* Batch Name */}
-                          <TableCell className="text-lg">
-                            {report.batch || "-"}
-                          </TableCell>
+              {/* Subject Filter */}
+              <div>
+                <label className="mr-2 text-sm font-medium">Subject:</label>
+                <select
+                  className="border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedSubject}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                >
+                  <option value="All">All</option>
+                  {[...new Set(reports.map((r) => r.subject))].map((subject) => (
+                    <option key={subject} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </CardHeader>
 
-                          {/* Subject */}
-                          <TableCell className="text-lg">
-                            {report.subject || "-"}
-                          </TableCell>
+          <CardContent>
+            {loading ? (
+              <p>Loading...</p>
+            ) : reports.length === 0 ? (
+              <p className="text-gray-400">No reports found matching your criteria.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Batch Name</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Division</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
 
-                          {/* Division */}
-                          <TableCell className="text-lg">
-                            {report.section || "-"}
-                          </TableCell>
+                <TableBody>
+                  {reports
+                    .filter(
+                      (r) =>
+                        (selectedBatch === "All" || r.batch === selectedBatch) &&
+                        (selectedSubject === "All" || r.subject === selectedSubject)
+                    )
+                    .map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell className="text-lg">{report.batch || "-"}</TableCell>
+                        <TableCell className="text-lg">{report.subject || "-"}</TableCell>
+                        <TableCell className="text-lg">{report.section || "-"}</TableCell>
+                        <TableCell className="text-lg">
+                          {report.date
+                            ? new Date(report.date).toLocaleDateString()
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="flex gap-2">
+                          <Button size="sm" variant="outline" asChild>
+                            <a
+                              href={report.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Eye className="w-4 h-4 mr-1" /> Preview
+                            </a>
+                          </Button>
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={report.url} download>
+                              <Download className="w-4 h-4 mr-1" /> Download
+                            </a>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-                          {/* Date */}
-                          <TableCell className="text-lg">
-                            {report.date
-                              ? new Date(report.date).toLocaleDateString()
-                              : "-"}
-                          </TableCell>
-
-                          {/* Actions */}
-                          <TableCell className="flex gap-2">
-                            <Button size="sm" variant="outline" asChild>
-                              <a
-                                href={report.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <Eye className="w-4 h-4 mr-1" /> Preview
-                              </a>
-                            </Button>
-                            <Button size="sm" variant="outline" asChild>
-                              <a href={report.url} download>
-                                <Download className="w-4 h-4 mr-1" /> Download
-                              </a>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-        </main>
-      </div>
-    );
-  }
+      </main>
+    </div>
+  );
+}
