@@ -143,7 +143,7 @@ const Dashboard = () => {
       description: "Download Excel files and attendance reports",
       icon: FileSpreadsheet,
       variant: "warning" as const,
-      stats: `${totalReports} Reports`, // ✅ Show total reports here
+      stats: `${totalReports} Reports`,
       view: "reports" as DashboardView,
     },
     {
@@ -235,56 +235,62 @@ const Dashboard = () => {
         <div className="mt-10 bg-gray-50 p-6 rounded-lg border">
           <h4 className="font-semibold mb-4 text-lg">Attendance Result</h4>
 
-          {/* Present Students */}
-          <h5 className="font-medium mb-2">Present Students</h5>
-          {attendanceResult.present && attendanceResult.present.length > 0 ? (
-            <table className="w-full border border-gray-300 rounded-lg mb-6">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="border px-4 py-2 text-left">Number</th>
-                  <th className="border px-4 py-2 text-left">Student Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceResult.present.map(
-                  (fullName: string, idx: number) => (
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Present Students */}
+            {attendanceResult.present && attendanceResult.present.length > 0 ? (
+              <table className="w-full border border-gray-300 rounded-lg mb-6">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border px-4 py-2 text-left">Number</th>
+                    <th className="border px-4 py-2 text-left">ER Number</th>
+                    <th className="border px-4 py-2 text-left">Student Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceResult.present.map((student: any, idx: number) => (
                     <tr key={idx} className="hover:bg-gray-50">
                       <td className="border px-4 py-2">{idx + 1}</td>
-                      <td className="border px-4 py-2">{fullName}</td>
+                      <td className="border px-4 py-2">{student.er_number}</td>
+                      <td className="border px-4 py-2">{student.name}</td>
                     </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-sm text-gray-500 mb-6">No students detected.</p>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-sm text-gray-500 mb-6">No present students.</p>
+            )}
 
-          {/* Absent Students */}
-          {attendanceResult.absent && attendanceResult.absent.length > 0 && (
-            <>
-              <h5 className="font-medium mb-2">Absent Students</h5>
-              <ul className="list-disc list-inside text-sm text-red-600 mb-6">
-                {attendanceResult.absent.map((name: string, idx: number) => (
-                  <li key={idx}>{name}</li>
-                ))}
-              </ul>
-            </>
-          )}
 
-          {/* Report Link */}
-          {attendanceResult.report_url && (
-            <a
-              className="inline-block mt-2 text-blue-600 hover:underline"
-              href={`${API_BASE}${attendanceResult.report_url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-            </a>
-          )}
+            {attendanceResult.absent && attendanceResult.absent.length > 0 ? (
+              <table className="w-full border border-gray-300 rounded-lg mb-6">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border px-4 py-2 text-left">Number</th>
+                    <th className="border px-4 py-2 text-left">ER Number</th>
+                    <th className="border px-4 py-2 text-left">Student Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceResult.absent.map((student: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="border px-4 py-2">{idx + 1}</td>
+                      <td className="border px-4 py-2">{student.er_number}</td>
+                      <td className="border px-4 py-2 text-red-600">{student.name}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-sm text-gray-500 mb-6">No absent students.</p>
+            )}
+
+
+          </div>
         </div>
-      )}
-    </div>
+      )
+      }
+
+    </div >
   );
 
   // ✅ Handle View Switching
