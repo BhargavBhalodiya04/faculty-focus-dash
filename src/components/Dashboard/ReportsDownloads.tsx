@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, Eye, FileSpreadsheet } from "lucide-react";
+import { Download, Eye, FileSpreadsheet, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ interface Report {
   status: string;
   batch: string;       // used as Class in UI
   subject: string;
-  section?: string;    // <-- made optional; we fill it if backend doesn't send
+  section?: string;    // <-- optional
   date: string;        // ISO or parsable string
   url: string;
   students: string[];
@@ -41,7 +41,7 @@ function parseFromFileName(fileName: string) {
   let m = base.match(/^(\d{8})_([^_]+)_([^_]+)_([^_]+)$/);
   if (m) {
     const [, yyyymmdd, className, section, subject] = m;
-    const date = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6)}`; // YYYY-MM-DD
+    const date = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6)}`;
     return { className, subject, section, date };
   }
 
@@ -50,7 +50,7 @@ function parseFromFileName(fileName: string) {
   if (m) {
     const [, className, subject, section, ddmmyyyy] = m;
     const [dd, mm, yyyy] = ddmmyyyy.split("-");
-    const date = `${yyyy}-${mm}-${dd}`; // YYYY-MM-DD
+    const date = `${yyyy}-${mm}-${dd}`;
     return { className, subject, section, date };
   }
 
@@ -77,11 +77,14 @@ export default function ReportsPage() {
   const [selectedBatch, setSelectedBatch] = useState("All");
   const [selectedSubject, setSelectedSubject] = useState("All");
 
+  // Preview Modal state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   useEffect(() => {
     fetch("http://15.206.75.171:5000/api/reports")
       .then((res) => res.json())
       .then((data: Report[]) => {
-        // Normalize: if backend didn't send class/subject/section/date, derive from fileName
+        // Normalize
         const normalized = data.map((r) => {
           const meta = parseFromFileName(r.userFriendlyName || r.fileName || "");
           return {
@@ -93,29 +96,23 @@ export default function ReportsPage() {
           } as Report;
         });
 
-
         setReports(normalized);
 
-        // Total Reports
+        // Stats
         setTotalReports(normalized.length);
 
-        // Total Size
         const sizeInKB = normalized.reduce((acc, r) => {
           const val = parseFloat(String(r.size).replace(/KB/i, "").trim());
           return acc + (isNaN(val) ? 0 : val);
         }, 0);
         setTotalSize(sizeInKB.toFixed(1) + " KB");
 
-        // Total Records
         const recordsCount = normalized.reduce((acc, r) => acc + (Number(r.records) || 0), 0);
         setTotalRecords(recordsCount);
 
-        // Latest Report Date
         if (normalized.length > 0) {
           const latestDate = new Date(
-            Math.max(
-              ...normalized.map((r) => new Date(r.date || 0).getTime())
-            )
+            Math.max(...normalized.map((r) => new Date(r.date || 0).getTime()))
           );
           setLatest(latestDate.toLocaleString());
         }
@@ -135,6 +132,7 @@ export default function ReportsPage() {
               onClick={() => window.history.back()}
               className="text-sm text-blue-600 hover:text-blue-800 transition-colors mb-2 text-left"
             >
+              ← Back
             </button>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <FileSpreadsheet className="w-6 h-6" /> Reports & Downloads
@@ -148,9 +146,7 @@ export default function ReportsPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Total Reports</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Total Reports</CardTitle></CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{totalReports}</p>
               <p className="text-sm text-gray-500">Available files</p>
@@ -158,9 +154,7 @@ export default function ReportsPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Total Size</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Total Size</CardTitle></CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{totalSize}</p>
               <p className="text-sm text-gray-500">Combined file size</p>
@@ -168,9 +162,7 @@ export default function ReportsPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Total Records</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Total Records</CardTitle></CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{totalRecords}</p>
               <p className="text-sm text-gray-500">Total attendance records</p>
@@ -178,9 +170,7 @@ export default function ReportsPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Latest</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Latest</CardTitle></CardHeader>
             <CardContent>
               <p className="text-lg font-semibold">{latest}</p>
               <p className="text-sm text-gray-500">Last generated</p>
@@ -210,9 +200,7 @@ export default function ReportsPage() {
                 >
                   <option value="All">All</option>
                   {[...new Set(reports.map((r) => r.batch))].map((batch) => (
-                    <option key={batch} value={batch}>
-                      {batch}
-                    </option>
+                    <option key={batch} value={batch}>{batch}</option>
                   ))}
                 </select>
               </div>
@@ -227,9 +215,7 @@ export default function ReportsPage() {
                 >
                   <option value="All">All</option>
                   {[...new Set(reports.map((r) => r.subject))].map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
+                    <option key={subject} value={subject}>{subject}</option>
                   ))}
                 </select>
               </div>
@@ -266,19 +252,19 @@ export default function ReportsPage() {
                         <TableCell className="text-lg">{report.subject || "-"}</TableCell>
                         <TableCell className="text-lg">{report.section || "-"}</TableCell>
                         <TableCell className="text-lg">
-                          {report.date
-                            ? new Date(report.date).toLocaleDateString()
-                            : "-"}
+                          {report.date ? new Date(report.date).toLocaleDateString() : "-"}
                         </TableCell>
                         <TableCell className="flex gap-2">
-                          <Button size="sm" variant="outline" asChild>
-                            <a
-                              href={report.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Eye className="w-4 h-4 mr-1" /> Preview
-                            </a>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              setPreviewUrl(
+                                `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(report.url)}`
+                              )
+                            }
+                          >
+                            <Eye className="w-4 h-4 mr-1" /> Preview
                           </Button>
                           <Button size="sm" variant="outline" asChild>
                             <a href={report.url} download>
@@ -294,6 +280,24 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
+        {/* Preview Modal */}
+        {previewUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div className="bg-white w-11/12 h-5/6 rounded-lg shadow-lg relative">
+              <button
+                className="absolute top-2 right-2 text-gray-700 hover:text-red-600"
+                onClick={() => setPreviewUrl(null)}
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <iframe
+                src={previewUrl}
+                className="w-full h-full rounded-b-lg"
+                frameBorder="0"
+              ></iframe>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
