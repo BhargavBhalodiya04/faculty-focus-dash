@@ -61,22 +61,49 @@ export const AttendanceAnalytics = () => {
         <section className="grid md:grid-cols-2 gap-10">
 
           {/* Daily Attendance Trend */}
+          {/* Daily Attendance Trend */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b pb-2">
               📊 Daily Attendance Trend
             </h2>
+
             {data.daily_trend_data.length > 0 ? (
-              <ResponsiveContainer width="100%" height={400}>
-                <ComposedChart data={data.daily_trend_data}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tick={{ fill: '#4B5563' }} />
-                  <YAxis unit=" students" tick={{ fill: '#4B5563' }} />
-                  <Tooltip contentStyle={{ backgroundColor: '#F9FAFB', borderRadius: '8px' }} />
-                  <Legend />
-                  <Bar dataKey="attendance" barSize={40} fill="#4F46E5" />
-                  <Line type="monotone" dataKey="attendance" stroke="#10B981" strokeWidth={3} />
-                </ComposedChart>
-              </ResponsiveContainer>
+              <div className="w-full overflow-x-auto">
+                <ResponsiveContainer width="100%" height={450}>
+                  <ComposedChart data={data.daily_trend_data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: '#374151', fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      interval={0}
+                    />
+
+                    <YAxis
+                      tick={{ fill: '#374151', fontSize: 12 }}
+                      label={{ value: 'Students Present', angle: -90, position: 'insideLeft', offset: 10 }}
+                    />
+
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                    />
+
+                    <Legend verticalAlign="top" height={36} />
+
+                    {/* Only Line for Cleaner View */}
+                    <Line
+                      type="monotone"
+                      dataKey="attendance"
+                      stroke="#2563eb"
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
               <p className="text-gray-500 text-center">No trend data available.</p>
             )}
