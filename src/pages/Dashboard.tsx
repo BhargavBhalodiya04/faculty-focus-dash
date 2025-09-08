@@ -146,14 +146,14 @@ const Dashboard = () => {
       stats: `${totalReports} Reports`,
       view: "reports" as DashboardView,
     },
-    {
-      title: "Class Overview",
-      description: "Subject-wise attendance and class graphs",
-      icon: BookOpen,
-      variant: "secondary" as const,
-      stats: "—",
-      view: "classes" as DashboardView,
-    },
+    // {
+    //   title: "Class Overview",
+    //   description: "Subject-wise attendance and class graphs",
+    //   icon: BookOpen,
+    //   variant: "secondary" as const,
+    //   stats: "—",
+    //   view: "classes" as DashboardView,
+    // },
   ];
 
   // ✅ Attendance Form + Results

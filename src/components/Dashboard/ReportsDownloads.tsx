@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Download, Eye, FileSpreadsheet, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -19,21 +18,22 @@ interface Report {
   size: string;
   records: number;
   status: string;
-  batch: string;       // used as Class in UI
+  batch: string;
   subject: string;
-  section?: string;    // <-- optional
-  date: string;        // ISO or parsable string
+  section?: string;
+  date: string;
   url: string;
   students: string[];
 }
 
 function parseFromFileName(fileName: string) {
-  if (!fileName) return {} as {
-    className?: string;
-    subject?: string;
-    section?: string;
-    date?: string;
-  };
+  if (!fileName)
+    return {} as {
+      className?: string;
+      subject?: string;
+      section?: string;
+      date?: string;
+    };
 
   const base = fileName.replace(/\.xlsx$/i, "");
 
@@ -41,7 +41,10 @@ function parseFromFileName(fileName: string) {
   let m = base.match(/^(\d{8})_([^_]+)_([^_]+)_([^_]+)$/);
   if (m) {
     const [, yyyymmdd, className, section, subject] = m;
-    const date = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6)}`;
+    const date = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(
+      4,
+      6
+    )}-${yyyymmdd.slice(6)}`;
     return { className, subject, section, date };
   }
 
@@ -72,19 +75,17 @@ export default function ReportsPage() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [latest, setLatest] = useState("-");
 
-  // 🔍 Filter state
-  const [search, setSearch] = useState("");
+  // Filters
   const [selectedBatch, setSelectedBatch] = useState("All");
   const [selectedSubject, setSelectedSubject] = useState("All");
 
-  // Preview Modal state
+  // Preview Modal
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("http://15.206.75.171:5000/api/reports")
       .then((res) => res.json())
       .then((data: Report[]) => {
-        // Normalize
         const normalized = data.map((r) => {
           const meta = parseFromFileName(r.userFriendlyName || r.fileName || "");
           return {
@@ -97,8 +98,6 @@ export default function ReportsPage() {
         });
 
         setReports(normalized);
-
-        // Stats
         setTotalReports(normalized.length);
 
         const sizeInKB = normalized.reduce((acc, r) => {
@@ -107,7 +106,10 @@ export default function ReportsPage() {
         }, 0);
         setTotalSize(sizeInKB.toFixed(1) + " KB");
 
-        const recordsCount = normalized.reduce((acc, r) => acc + (Number(r.records) || 0), 0);
+        const recordsCount = normalized.reduce(
+          (acc, r) => acc + (Number(r.records) || 0),
+          0
+        );
         setTotalRecords(recordsCount);
 
         if (normalized.length > 0) {
@@ -125,15 +127,15 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="container mx-auto px-6 py-8">
-        {/* Header Section */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col">
-            <button
+            {/* <button
               onClick={() => window.history.back()}
               className="text-sm text-blue-600 hover:text-blue-800 transition-colors mb-2 text-left"
             >
               ← Back
-            </button>
+            </button> */}
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <FileSpreadsheet className="w-6 h-6" /> Reports & Downloads
             </h1>
@@ -143,10 +145,12 @@ export default function ReportsPage() {
           Download attendance reports and Excel files
         </p>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
-            <CardHeader><CardTitle>Total Reports</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Total Reports</CardTitle>
+            </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{totalReports}</p>
               <p className="text-sm text-gray-500">Available files</p>
@@ -154,7 +158,9 @@ export default function ReportsPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Total Size</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Total Size</CardTitle>
+            </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{totalSize}</p>
               <p className="text-sm text-gray-500">Combined file size</p>
@@ -162,7 +168,9 @@ export default function ReportsPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Total Records</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Total Records</CardTitle>
+            </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{totalRecords}</p>
               <p className="text-sm text-gray-500">Total attendance records</p>
@@ -170,7 +178,9 @@ export default function ReportsPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Latest</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Latest</CardTitle>
+            </CardHeader>
             <CardContent>
               <p className="text-lg font-semibold">{latest}</p>
               <p className="text-sm text-gray-500">Last generated</p>
@@ -188,7 +198,7 @@ export default function ReportsPage() {
               </p>
             </div>
 
-            {/* 🔽 Filters aligned right */}
+            {/* Filters */}
             <div className="flex gap-4 mt-3 md:mt-0">
               {/* Batch Filter */}
               <div>
@@ -200,7 +210,9 @@ export default function ReportsPage() {
                 >
                   <option value="All">All</option>
                   {[...new Set(reports.map((r) => r.batch))].map((batch) => (
-                    <option key={batch} value={batch}>{batch}</option>
+                    <option key={batch} value={batch}>
+                      {batch}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -215,7 +227,9 @@ export default function ReportsPage() {
                 >
                   <option value="All">All</option>
                   {[...new Set(reports.map((r) => r.subject))].map((subject) => (
-                    <option key={subject} value={subject}>{subject}</option>
+                    <option key={subject} value={subject}>
+                      {subject}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -226,7 +240,9 @@ export default function ReportsPage() {
             {loading ? (
               <p>Loading...</p>
             ) : reports.length === 0 ? (
-              <p className="text-gray-400">No reports found matching your criteria.</p>
+              <p className="text-gray-400">
+                No reports found matching your criteria.
+              </p>
             ) : (
               <Table>
                 <TableHeader>
@@ -244,15 +260,24 @@ export default function ReportsPage() {
                     .filter(
                       (r) =>
                         (selectedBatch === "All" || r.batch === selectedBatch) &&
-                        (selectedSubject === "All" || r.subject === selectedSubject)
+                        (selectedSubject === "All" ||
+                          r.subject === selectedSubject)
                     )
                     .map((report) => (
                       <TableRow key={report.id}>
-                        <TableCell className="text-lg">{report.batch || "-"}</TableCell>
-                        <TableCell className="text-lg">{report.subject || "-"}</TableCell>
-                        <TableCell className="text-lg">{report.section || "-"}</TableCell>
                         <TableCell className="text-lg">
-                          {report.date ? new Date(report.date).toLocaleDateString() : "-"}
+                          {report.batch || "-"}
+                        </TableCell>
+                        <TableCell className="text-lg">
+                          {report.subject || "-"}
+                        </TableCell>
+                        <TableCell className="text-lg">
+                          {report.section || "-"}
+                        </TableCell>
+                        <TableCell className="text-lg">
+                          {report.date
+                            ? new Date(report.date).toLocaleDateString()
+                            : "-"}
                         </TableCell>
                         <TableCell className="flex gap-2">
                           <Button
@@ -260,7 +285,9 @@ export default function ReportsPage() {
                             variant="outline"
                             onClick={() =>
                               setPreviewUrl(
-                                `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(report.url)}`
+                                `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+                                  report.url
+                                )}`
                               )
                             }
                           >
@@ -283,16 +310,24 @@ export default function ReportsPage() {
         {/* Preview Modal */}
         {previewUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-            <div className="bg-white w-11/12 h-5/6 rounded-lg shadow-lg relative">
-              <button
-                className="absolute top-2 right-2 text-gray-700 hover:text-red-600"
-                onClick={() => setPreviewUrl(null)}
-              >
-                <X className="w-6 h-6" />
-              </button>
+            <div className="bg-white w-11/12 md:w-4/5 lg:w-3/4 h-5/6 rounded-xl shadow-2xl relative flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Report Preview
+                </h2>
+                <button
+                  className="text-gray-700 hover:text-red-600 transition"
+                  onClick={() => setPreviewUrl(null)}
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Iframe */}
               <iframe
                 src={previewUrl}
-                className="w-full h-full rounded-b-lg"
+                className="flex-1 w-full"
                 frameBorder="0"
               ></iframe>
             </div>

@@ -148,7 +148,8 @@ const Login = () => {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Powered by ICT Department • Secure Faculty Access
+          Powered by ICT Department • Secure Faculty Access 
+          <br></br>Bhargav Bhalodiya
         </p>
       </div>
     </div>
