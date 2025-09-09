@@ -13,6 +13,7 @@ export const ClassOverview = () => {
   const [overallStats, setOverallStats] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Fetch overview from backend
   useEffect(() => {
     const fetchOverview = async () => {
       try {
@@ -26,7 +27,8 @@ export const ClassOverview = () => {
             avgAttendance: data.avgAttendance || 0,
             totalStudents: data.totalStudents || 0,
             activeSubjects: data.activeSubjects || 0,
-            bestSubject: data.bestSubject || "N/A"
+            bestSubject: data.bestSubject || "N/A",
+            bestBatch: data.bestBatch || "N/A"
           });
         } else {
           console.error("Error fetching overview:", data.error);
@@ -45,15 +47,18 @@ export const ClassOverview = () => {
     return <p className="text-center text-muted-foreground">Loading attendance overview...</p>;
   }
 
-  // Unique batches and subjects for filters
-  const batches = [...new Set(subjectsData.map(item => item.batch || "Unknown"))];
-  const subjects = [...new Set(subjectsData.map(item => item.subject))];
+  // Unique batches and subjects
+  const batches = [...new Set(subjectsData.map(item => item.batch))];
+  const subjects = [...new Set(subjectsData.map(item => `${item.subject} (${item.batch})`))];
 
-  // Filtered data
-  const filteredSubjects = subjectsData.filter(item => 
-    (selectedBatch === "all" || item.batch === selectedBatch) &&
-    (selectedSubject === "all" || item.subject === selectedSubject)
-  );
+  // Filtered subjects for charts
+  const filteredSubjects = subjectsData
+    .filter(item => selectedBatch === "all" || item.batch === selectedBatch)
+    .map(item => ({
+      ...item,
+      subjectWithBatch: `${item.subject} (${item.batch})`
+    }))
+    .filter(item => selectedSubject === "all" || item.subjectWithBatch === selectedSubject);
 
   return (
     <div className="space-y-6">
@@ -79,7 +84,7 @@ export const ClassOverview = () => {
           </Select>
 
           <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Subject" />
             </SelectTrigger>
             <SelectContent>
@@ -136,7 +141,9 @@ export const ClassOverview = () => {
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{overallStats.bestSubject}</div>
+            <div className="text-2xl font-bold text-success">
+              {overallStats.bestSubject} ({overallStats.bestBatch})
+            </div>
             <p className="text-xs text-muted-foreground">Highest attendance</p>
           </CardContent>
         </Card>
@@ -144,6 +151,7 @@ export const ClassOverview = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Subject-wise Performance */}
         <Card className="dashboard-card">
           <CardHeader>
             <CardTitle>Subject-wise Performance</CardTitle>
@@ -153,15 +161,16 @@ export const ClassOverview = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={filteredSubjects}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="subject" angle={-45} textAnchor="end" height={80} />
+                <XAxis dataKey="subjectWithBatch" angle={-45} textAnchor="end" height={80} />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value, name, props) => [`${value}%`, props.payload.subjectWithBatch]} />
                 <Bar dataKey="attendance" fill="hsl(var(--primary))" radius={[4,4,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
+        {/* Overall Attendance Trend */}
         <Card className="dashboard-card">
           <CardHeader>
             <CardTitle>Overall Attendance Trend</CardTitle>
@@ -173,7 +182,7 @@ export const ClassOverview = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value, name, props) => [`${value}%`, props.payload.subject_batch]} />
                 <Area type="monotone" dataKey="attendance" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -183,4 +192,3 @@ export const ClassOverview = () => {
     </div>
   );
 };
-  
