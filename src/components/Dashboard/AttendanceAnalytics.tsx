@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   ComposedChart,
-  Bar,
   Line,
   XAxis,
   YAxis,
@@ -19,6 +18,13 @@ export const AttendanceAnalytics = () => {
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+
+  // Sorting
+  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,10 +47,37 @@ export const AttendanceAnalytics = () => {
     fetchData();
   }, []);
 
+  // Filtering
   const filteredStudents = data.students.filter((student) =>
     (student.name?.toString() || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
     (student.er_number?.toString() || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Sorting
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
+    if (a[sortConfig.key] < b[sortConfig.key]) {
+      return sortConfig.direction === "asc" ? -1 : 1;
+    }
+    if (a[sortConfig.key] > b[sortConfig.key]) {
+      return sortConfig.direction === "asc" ? 1 : -1;
+    }
+    return 0;
+  });
+
+  // Pagination logic
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentStudents = sortedStudents.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(sortedStudents.length / rowsPerPage);
+
+  // Handle Sorting
+  const requestSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
 
   if (loading)
     return (
@@ -59,8 +92,6 @@ export const AttendanceAnalytics = () => {
 
         {/* Charts Section */}
         <section className="grid md:grid-cols-2 gap-10">
-
-          {/* Daily Attendance Trend */}
           {/* Daily Attendance Trend */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b pb-2">
@@ -72,7 +103,6 @@ export const AttendanceAnalytics = () => {
                 <ResponsiveContainer width="100%" height={450}>
                   <ComposedChart data={data.daily_trend_data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-
                     <XAxis
                       dataKey="date"
                       tick={{ fill: '#374151', fontSize: 12 }}
@@ -80,19 +110,14 @@ export const AttendanceAnalytics = () => {
                       textAnchor="end"
                       interval={0}
                     />
-
                     <YAxis
                       tick={{ fill: '#374151', fontSize: 12 }}
                       label={{ value: 'Students Present', angle: -90, position: 'insideLeft', offset: 10 }}
                     />
-
                     <Tooltip
                       contentStyle={{ backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #d1d5db' }}
                     />
-
                     <Legend verticalAlign="top" height={36} />
-
-                    {/* Only Line for Cleaner View */}
                     <Line
                       type="monotone"
                       dataKey="attendance"
@@ -127,16 +152,15 @@ export const AttendanceAnalytics = () => {
               Distribution of attendance percentage per subject
             </p>
           </div>
-
         </section>
 
-        {/* Combined Student Attendance Section */}
+        {/* Student Attendance Overview */}
         <section className="bg-white rounded-lg shadow p-8">
           <h2 className="text-3xl font-semibold text-gray-800 mb-6 border-b pb-2">
             📋 Student Attendance Overview
           </h2>
 
-          {/* Search Filter Moved Here */}
+          {/* Search */}
           <div className="mb-6">
             <input
               type="text"
@@ -147,20 +171,40 @@ export const AttendanceAnalytics = () => {
             />
           </div>
 
-          {/* Attendance Table */}
-          {filteredStudents.length > 0 ? (
+          {/* Table */}
+          {currentStudents.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full table-auto border-collapse text-gray-700">
-                <thead>
-                  <tr className="bg-indigo-100 text-indigo-800">
-                    <th className="px-6 py-3 text-left font-semibold">Student Name</th>
-                    <th className="px-6 py-3 text-left font-semibold">Classes Attended</th>
-                    <th className="px-6 py-3 text-left font-semibold">Total Classes</th>
-                    <th className="px-6 py-3 text-left font-semibold">Attendance %</th>
+                <thead className="sticky top-0 bg-indigo-100">
+                  <tr>
+                    <th
+                      className="px-6 py-3 text-left font-semibold cursor-pointer"
+                      onClick={() => requestSort("name")}
+                    >
+                      Student Name ⬍
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left font-semibold cursor-pointer"
+                      onClick={() => requestSort("present_count")}
+                    >
+                      Classes Attended ⬍
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left font-semibold cursor-pointer"
+                      onClick={() => requestSort("total_classes")}
+                    >
+                      Total Classes ⬍
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left font-semibold cursor-pointer"
+                      onClick={() => requestSort("attendance_percentage")}
+                    >
+                      Attendance % ⬍
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student) => (
+                  {currentStudents.map((student) => (
                     <tr key={student.er_number} className="odd:bg-gray-50 even:bg-gray-100 hover:bg-indigo-50 transition">
                       <td className="px-6 py-4 font-medium">{student.name}</td>
                       <td className="px-6 py-4">{student.present_count}</td>
@@ -176,6 +220,27 @@ export const AttendanceAnalytics = () => {
           ) : (
             <p className="text-gray-500 text-center">No attendance data found.</p>
           )}
+
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-6">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className="px-4 py-2 bg-indigo-500 text-white rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <p className="text-gray-700">
+              Page {currentPage} of {totalPages}
+            </p>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="px-4 py-2 bg-indigo-500 text-white rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </section>
       </div>
     </div>
