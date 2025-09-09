@@ -112,6 +112,21 @@ const Dashboard = () => {
     }
   };
 
+    const [analyticsData, setAnalyticsData] = useState<{ avg_attendance_pct: string }>({
+    avg_attendance_pct: "0%",
+  });
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/dashboard")
+      .then((res) => res.json())
+      .then((data) => {
+        setAnalyticsData({
+          avg_attendance_pct: data.avg_attendance_pct,
+        });
+      });
+  }, []);
+
+
   // ✅ Dashboard Options
   const dashboardOptions = [
     {
@@ -135,9 +150,10 @@ const Dashboard = () => {
       description: "Individual student performance graphs",
       icon: BarChart3,
       variant: "primary" as const,
-      stats: "92% Avg",
+      stats: `${analyticsData.avg_attendance_pct} Avg`,
       view: "analytics" as DashboardView,
     },
+
     {
       title: "Reports & Downloads",
       description: "Download Excel files and attendance reports",
@@ -146,14 +162,14 @@ const Dashboard = () => {
       stats: `${totalReports} Reports`,
       view: "reports" as DashboardView,
     },
-    // {
-    //   title: "Class Overview",
-    //   description: "Subject-wise attendance and class graphs",
-    //   icon: BookOpen,
-    //   variant: "secondary" as const,
-    //   stats: "—",
-    //   view: "classes" as DashboardView,
-    // },
+    {
+      title: "Class Overview",
+      description: "Subject-wise attendance and class graphs",
+      icon: BookOpen,
+      variant: "secondary" as const,
+      stats: "—",
+      view: "classes" as DashboardView,
+    },
   ];
 
   // ✅ Attendance Form + Results
