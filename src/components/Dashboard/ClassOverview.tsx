@@ -98,7 +98,7 @@ export const ClassOverview = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="dashboard-card">
           <CardHeader className="flex justify-between pb-2">
             <CardTitle className="text-sm font-medium">Average Attendance</CardTitle>
@@ -147,7 +147,7 @@ export const ClassOverview = () => {
             <p className="text-xs text-muted-foreground">Highest attendance</p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

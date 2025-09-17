@@ -29,7 +29,7 @@ export const AttendanceAnalytics = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:5000/dashboard");
+        const res = await fetch("http://15.206.75.171:5000/dashboard");
         const json = await res.json();
 
         setData({
