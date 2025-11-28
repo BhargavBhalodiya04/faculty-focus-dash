@@ -27,28 +27,27 @@ interface Report {
 }
 
 function parseFromFileName(fileName: string) {
-  if (!fileName)
-    return {} as {
-      className?: string;
-      subject?: string;
-      section?: string;
-      date?: string;
-    };
+  if (!fileName) return {} as { className?: string; subject?: string; section?: string; date?: string };
 
   const base = fileName.replace(/\.xlsx$/i, "");
 
-  // Pattern 1: YYYYMMDD_Class_Section_Subject
-  let m = base.match(/^(\d{8})_([^_]+)_([^_]+)_([^_]+)$/);
+  // Pattern 1: YYYYMMDD_HHMMSS_Batch_Section_Subject
+  let m = base.match(/^(\d{8})_(\d{6})_([^_]+)_([^_]+)_([^_]+)$/);
+  if (m) {
+    const [, yyyymmdd, hhmmss, batch, section, subject] = m;
+    const date = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6)}`;
+    return { className: batch, subject, section, date };
+  }
+
+  // Pattern 2: YYYYMMDD_Class_Section_Subject
+  m = base.match(/^(\d{8})_([^_]+)_([^_]+)_([^_]+)$/);
   if (m) {
     const [, yyyymmdd, className, section, subject] = m;
-    const date = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(
-      4,
-      6
-    )}-${yyyymmdd.slice(6)}`;
+    const date = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6)}`;
     return { className, subject, section, date };
   }
 
-  // Pattern 2: Class_Subject_Section_DD-MM-YYYY
+  // Pattern 3: Class_Subject_Section_DD-MM-YYYY
   m = base.match(/^([^_]+)_([^_]+)_([^_]+)_(\d{2}-\d{2}-\d{4})$/);
   if (m) {
     const [, className, subject, section, ddmmyyyy] = m;
@@ -57,13 +56,9 @@ function parseFromFileName(fileName: string) {
     return { className, subject, section, date };
   }
 
-  return {} as {
-    className?: string;
-    subject?: string;
-    section?: string;
-    date?: string;
-  };
+  return {} as { className?: string; subject?: string; section?: string; date?: string };
 }
+
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -83,7 +78,7 @@ export default function ReportsPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("http://15.206.75.171:5000/api/reports")
+    fetch("http://3.110.88.205:5000/api/reports")
       .then((res) => res.json())
       .then((data: Report[]) => {
         const normalized = data.map((r) => {

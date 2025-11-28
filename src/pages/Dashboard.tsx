@@ -16,7 +16,7 @@ import ReportsDownloads from "@/components/Dashboard/ReportsDownloads";
 import { ClassOverview } from "@/components/Dashboard/ClassOverview";
 import RegisterStudent from "@/components/Dashboard/RegisterStudent";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://15.206.75.171:5000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://3.110.88.205:5000";
 
 type DashboardView =
   | "main"
@@ -27,6 +27,19 @@ type DashboardView =
   | "register"
   | "attendance";
 
+type StudentRecord = {
+  er_number?: string;
+  name?: string;
+};
+
+type AttendanceResult = {
+  success?: boolean;
+  error?: string;
+  present?: StudentRecord[];
+  absent?: StudentRecord[];
+  [k: string]: any;
+};
+
 const Dashboard = () => {
   const [currentView, setCurrentView] = useState<DashboardView>("main");
   const [totalStudents, setTotalStudents] = useState<number>(0);
@@ -36,29 +49,38 @@ const Dashboard = () => {
   const [className, setClassName] = useState("");
   const [subject, setSubject] = useState("");
   const [groupImages, setGroupImages] = useState<FileList | null>(null);
-  const [attendanceResult, setAttendanceResult] = useState<any>(null);
+  const [attendanceResult, setAttendanceResult] = useState<AttendanceResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // ✅ Fetch students count
+  // Fetch students count
   const fetchStudentsCount = async () => {
     try {
       const res = await fetch(`${API_BASE}/students/count`);
       const data = await res.json();
-      setTotalStudents(data.count || 0);
+      setTotalStudents(Number(data?.count) || 0);
     } catch (err) {
       console.error("Error fetching student count:", err);
+      setTotalStudents(0);
     }
   };
 
-  // ✅ Fetch reports count
+  // Fetch reports count
   const fetchReportsCount = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/reports`);
       const data = await res.json();
-      setTotalReports(data.length || 0);
+      // if the API returns an array
+      if (Array.isArray(data)) {
+        setTotalReports(data.length);
+      } else if (typeof data === "object" && data !== null && Array.isArray(data.reports)) {
+        setTotalReports(data.reports.length);
+      } else {
+        setTotalReports(Number(data?.length) || 0);
+      }
     } catch (err) {
       console.error("Error fetching reports:", err);
+      setTotalReports(0);
     }
   };
 
@@ -76,18 +98,17 @@ const Dashboard = () => {
       setErrorMsg("Please select at least one group image.");
       return;
     }
-    if (!batchName || !subject) {
+    if (!batchName.trim() || !subject.trim()) {
       setErrorMsg("Batch and Subject are required.");
       return;
     }
 
     const fd = new FormData();
-    fd.append("batch_name", batchName);
-    fd.append("subject_name", subject);
-    fd.append("lab_name", className || "");
+    fd.append("batch_name", batchName.trim());
+    fd.append("subject_name", subject.trim());
+    fd.append("lab_name", className.trim() || "");
 
-    // ✅ Append all uploaded images
-    Array.from(groupImages).forEach((file, idx) => {
+    Array.from(groupImages).forEach((file) => {
       fd.append("class_images", file);
     });
 
@@ -98,36 +119,42 @@ const Dashboard = () => {
         body: fd,
       });
 
-      const data = await res.json();
+      const data: AttendanceResult = await res.json();
 
-      if (!data.success) {
+      if (!data) {
+        setErrorMsg("Empty response from server.");
+      } else if (data.success === false) {
         setErrorMsg(data.error || "Attendance failed");
       } else {
         setAttendanceResult(data);
       }
     } catch (err: any) {
+      console.error("Attendance error:", err);
       setErrorMsg(err?.message || "Network error");
     } finally {
       setLoading(false);
     }
   };
 
-    const [analyticsData, setAnalyticsData] = useState<{ avg_attendance_pct: string }>({
+  const [analyticsData, setAnalyticsData] = useState<{ avg_attendance_pct: string }>({
     avg_attendance_pct: "0%",
   });
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/dashboard")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/dashboard`);
+        const data = await res.json();
         setAnalyticsData({
-          avg_attendance_pct: data.avg_attendance_pct,
+          avg_attendance_pct: data?.avg_attendance_pct ?? "0%",
         });
-      });
+      } catch (err) {
+        console.error("Error fetching dashboard:", err);
+      }
+    };
+    fetchDashboard();
   }, []);
 
-
-  // ✅ Dashboard Options
   const dashboardOptions = [
     {
       title: "Register Student",
@@ -142,7 +169,6 @@ const Dashboard = () => {
       description: "Capture class photo and mark attendance",
       icon: Scan,
       variant: "secondary" as const,
-      stats: "Ready",
       view: "attendance" as DashboardView,
     },
     {
@@ -150,7 +176,6 @@ const Dashboard = () => {
       description: "Individual student performance graphs",
       icon: BarChart3,
       variant: "primary" as const,
-      stats: `${analyticsData.avg_attendance_pct} Avg`,
       view: "analytics" as DashboardView,
     },
 
@@ -172,13 +197,12 @@ const Dashboard = () => {
     },
   ];
 
-  // ✅ Attendance Form + Results
+  // Attendance Form + Results
   const renderAttendanceView = () => (
     <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md border">
       <h3 className="text-2xl font-semibold mb-6">Take Attendance</h3>
 
       <form onSubmit={handleAttendanceSubmit} className="space-y-6">
-        {/* Batch / Class / Subject */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium mb-2">Batch Name</label>
@@ -211,9 +235,7 @@ const Dashboard = () => {
 
         {/* File Upload */}
         <div>
-          <label className="block text-sm font-medium mb-2">
-            Upload Class Photo
-          </label>
+          <label className="block text-sm font-medium mb-2">Upload Class Photo</label>
           <input
             type="file"
             accept=".jpg,.jpeg,.png"
@@ -225,9 +247,7 @@ const Dashboard = () => {
               file:bg-blue-50 file:text-blue-700
               hover:file:bg-blue-100"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Upload one or more class/group photos.
-          </p>
+          <p className="text-xs text-gray-500 mt-1">Upload one or more class/group photos.</p>
         </div>
 
         {/* Errors */}
@@ -246,14 +266,14 @@ const Dashboard = () => {
         </button>
       </form>
 
-      {/* ✅ Attendance Result */}
+      {/* Attendance Result */}
       {attendanceResult && (
         <div className="mt-10 bg-gray-50 p-6 rounded-lg border">
           <h4 className="font-semibold mb-4 text-lg">Attendance Result</h4>
 
           <div className="flex flex-col md:flex-row gap-6">
             {/* Present Students */}
-            {attendanceResult.present && attendanceResult.present.length > 0 ? (
+            {attendanceResult?.present && attendanceResult.present.length > 0 ? (
               <table className="w-full border border-gray-300 rounded-lg mb-6">
                 <thead className="bg-gray-100">
                   <tr>
@@ -263,7 +283,7 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {attendanceResult.present.map((student: any, idx: number) => (
+                  {attendanceResult.present.map((student, idx) => (
                     <tr key={idx} className="hover:bg-gray-50">
                       <td className="border px-4 py-2">{idx + 1}</td>
                       <td className="border px-4 py-2">{student.er_number}</td>
@@ -276,8 +296,8 @@ const Dashboard = () => {
               <p className="text-sm text-gray-500 mb-6">No present students.</p>
             )}
 
-
-            {attendanceResult.absent && attendanceResult.absent.length > 0 ? (
+            {/* Absent Students */}
+            {attendanceResult?.absent && attendanceResult.absent.length > 0 ? (
               <table className="w-full border border-gray-300 rounded-lg mb-6">
                 <thead className="bg-gray-100">
                   <tr>
@@ -287,7 +307,7 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {attendanceResult.absent.map((student: any, idx: number) => (
+                  {attendanceResult.absent.map((student, idx) => (
                     <tr key={idx} className="hover:bg-gray-50">
                       <td className="border px-4 py-2">{idx + 1}</td>
                       <td className="border px-4 py-2">{student.er_number}</td>
@@ -299,17 +319,13 @@ const Dashboard = () => {
             ) : (
               <p className="text-sm text-gray-500 mb-6">No absent students.</p>
             )}
-
-
           </div>
         </div>
-      )
-      }
-
-    </div >
+      )}
+    </div>
   );
 
-  // ✅ Handle View Switching
+  // Handle View Switching
   const renderCurrentView = () => {
     switch (currentView) {
       case "students":
@@ -328,17 +344,13 @@ const Dashboard = () => {
         return (
           <div className="space-y-8">
             <div className="text-center py-8 bg-white rounded-lg shadow">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                Welcome to Faculty Dashboard
-              </h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Faculty Dashboard</h2>
               <p className="text-lg text-gray-500">
                 Comprehensive attendance management powered by ICT Department
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-6 text-gray-800">
-                Dashboard Functions
-              </h3>
+              <h3 className="text-xl font-semibold mb-6 text-gray-800">Dashboard Functions</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dashboardOptions.map((option, index) => (
                   <DashboardCard

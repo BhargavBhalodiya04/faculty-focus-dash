@@ -1,23 +1,37 @@
 import { useState, useEffect } from "react";
 import { BarChart3, TrendingUp, Users, BookOpen } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
 
 export const ClassOverview = () => {
   const [selectedBatch, setSelectedBatch] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
-  const [subjectsData, setSubjectsData] = useState([]);
-  const [trendData, setTrendData] = useState([]);
-  const [overallStats, setOverallStats] = useState({});
+  const [subjectsData, setSubjectsData] = useState<any[]>([]);
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [overallStats, setOverallStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
-  // Fetch overview from backend
   useEffect(() => {
     const fetchOverview = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:5000/overview");
+        const res = await fetch("http://3.110.88.205:5000/overview");
         const data = await res.json();
 
         if (!data.error) {
@@ -28,7 +42,7 @@ export const ClassOverview = () => {
             totalStudents: data.totalStudents || 0,
             activeSubjects: data.activeSubjects || 0,
             bestSubject: data.bestSubject || "N/A",
-            bestBatch: data.bestBatch || "N/A"
+            bestBatch: data.bestBatch || "N/A",
           });
         } else {
           console.error("Error fetching overview:", data.error);
@@ -44,21 +58,28 @@ export const ClassOverview = () => {
   }, []);
 
   if (loading) {
-    return <p className="text-center text-muted-foreground">Loading attendance overview...</p>;
+    return (
+      <p className="text-center text-muted-foreground">
+        Loading attendance overview...
+      </p>
+    );
   }
 
-  // Unique batches and subjects
-  const batches = [...new Set(subjectsData.map(item => item.batch))];
-  const subjects = [...new Set(subjectsData.map(item => `${item.subject} (${item.batch})`))];
+  const batches = [...new Set(subjectsData.map((item) => item.batch))];
+  const subjects = [
+    ...new Set(subjectsData.map((item) => `${item.subject} (${item.batch})`)),
+  ];
 
-  // Filtered subjects for charts
   const filteredSubjects = subjectsData
-    .filter(item => selectedBatch === "all" || item.batch === selectedBatch)
-    .map(item => ({
+    .filter((item) => selectedBatch === "all" || item.batch === selectedBatch)
+    .map((item) => ({
       ...item,
-      subjectWithBatch: `${item.subject} (${item.batch})`
+      subjectWithBatch: `${item.subject} (${item.batch})`,
     }))
-    .filter(item => selectedSubject === "all" || item.subjectWithBatch === selectedSubject);
+    .filter(
+      (item) =>
+        selectedSubject === "all" || item.subjectWithBatch === selectedSubject
+    );
 
   return (
     <div className="space-y-6">
@@ -77,8 +98,10 @@ export const ClassOverview = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Batches</SelectItem>
-              {batches.map(batch => (
-                <SelectItem key={batch} value={batch}>{batch}</SelectItem>
+              {batches.map((batch) => (
+                <SelectItem key={batch} value={batch}>
+                  {batch}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -89,8 +112,10 @@ export const ClassOverview = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subjects</SelectItem>
-              {subjects.map(subject => (
-                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+              {subjects.map((subject) => (
+                <SelectItem key={subject} value={subject}>
+                  {subject}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -98,14 +123,18 @@ export const ClassOverview = () => {
       </div>
 
       {/* Summary Cards */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="dashboard-card">
           <CardHeader className="flex justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Average Attendance</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Average Attendance
+            </CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{overallStats.avgAttendance}%</div>
+            <div className="text-2xl font-bold text-primary">
+              {overallStats.avgAttendance}%
+            </div>
             <div className="flex items-center text-xs text-success">
               <TrendingUp className="mr-1 h-3 w-3" />
               Dynamic calculation
@@ -115,29 +144,39 @@ export const ClassOverview = () => {
 
         <Card className="dashboard-card">
           <CardHeader className="flex justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Students
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overallStats.totalStudents}</div>
+            <div className="text-2xl font-bold">
+              {overallStats.totalStudents}
+            </div>
             <p className="text-xs text-muted-foreground">Across all subjects</p>
           </CardContent>
         </Card>
 
         <Card className="dashboard-card">
           <CardHeader className="flex justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Subjects</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Subjects
+            </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overallStats.activeSubjects}</div>
+            <div className="text-2xl font-bold">
+              {overallStats.activeSubjects}
+            </div>
             <p className="text-xs text-muted-foreground">Currently tracked</p>
           </CardContent>
         </Card>
 
         <Card className="dashboard-card">
           <CardHeader className="flex justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Best Performing</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Best Performing
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
@@ -147,26 +186,45 @@ export const ClassOverview = () => {
             <p className="text-xs text-muted-foreground">Highest attendance</p>
           </CardContent>
         </Card>
-      </div> */}
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Subject-wise Performance */}
+        {/* Subject-wise Performance */}
         <Card className="dashboard-card">
           <CardHeader>
             <CardTitle>Subject-wise Performance</CardTitle>
-            <CardDescription>Average attendance percentage by subject</CardDescription>
+            <CardDescription>
+              Average attendance percentage by subject
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={filteredSubjects}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="subjectWithBatch" angle={-45} textAnchor="end" height={80} />
-                <YAxis />
-                <Tooltip formatter={(value, name, props) => [`${value}%`, props.payload.subjectWithBatch]} />
-                <Bar dataKey="attendance" fill="hsl(var(--primary))" radius={[4,4,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {filteredSubjects.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center">
+                No data available for the selected filters
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={filteredSubjects}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="subjectWithBatch"
+                    tick={{ fontSize: 12 }}
+                    angle={-25}
+                    interval={0}
+                    textAnchor="end"
+                  />
+                  <YAxis />
+                  <Tooltip formatter={(value: any) => `${value}%`} />
+                  <Bar
+                    dataKey="attendance"
+                    fill="hsl(var(--primary))"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -174,18 +232,37 @@ export const ClassOverview = () => {
         <Card className="dashboard-card">
           <CardHeader>
             <CardTitle>Overall Attendance Trend</CardTitle>
-            <CardDescription>Monthly attendance across all subjects</CardDescription>
+            <CardDescription>
+              Monthly attendance counts across all subjects
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value, name, props) => [`${value}%`, props.payload.subject_batch]} />
-                <Area type="monotone" dataKey="attendance" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {trendData.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center">
+                No trend data available
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value, name, props) => [
+                      `${value} students`,
+                      props.payload.subject_batch,
+                    ]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="attendance"
+                    stroke="hsl(var(--primary))"
+                    fill="hsl(var(--primary))"
+                    fillOpacity={0.2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
