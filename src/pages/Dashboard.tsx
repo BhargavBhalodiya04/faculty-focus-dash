@@ -16,7 +16,7 @@ import ReportsDownloads from "@/components/Dashboard/ReportsDownloads";
 import { ClassOverview } from "@/components/Dashboard/ClassOverview";
 import RegisterStudent from "@/components/Dashboard/RegisterStudent";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://3.110.88.205:5000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://13.126.155.96:5000";
 
 type DashboardView =
   | "main"

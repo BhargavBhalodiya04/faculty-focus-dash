@@ -78,7 +78,7 @@ export default function ReportsPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("http://3.110.88.205:5000/api/reports")
+    fetch("http://13.126.155.96:5000/api/reports")
       .then((res) => res.json())
       .then((data: Report[]) => {
         const normalized = data.map((r) => {

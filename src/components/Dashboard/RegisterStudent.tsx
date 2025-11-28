@@ -60,7 +60,7 @@ const RegisterStudent: React.FC<RegisterStudentProps> = ({ onStudentAdded }) => 
     formData.append("bucket_name", bucketName);
 
     try {
-      const response = await fetch("http://3.110.88.205:5000/upload-image", {
+      const response = await fetch("http://13.126.155.96:5000/upload-image", {
         method: "POST",
         body: formData,
       });

@@ -31,7 +31,7 @@ export const ClassOverview = () => {
   useEffect(() => {
     const fetchOverview = async () => {
       try {
-        const res = await fetch("http://3.110.88.205:5000/overview");
+        const res = await fetch("http://13.126.155.96:5000/overview");
         const data = await res.json();
 
         if (!data.error) {
